@@ -1,0 +1,35 @@
+{
+  "nota": "Casos de uso. El comportamiento del LLM se implementará en la etapa 3.",
+  "casos": [
+    {
+      "id": "cultura_presupuesto",
+      "mensaje": "Cuatro días en mayo desde Madrid, dos viajeros, 900 EUR en total y cultura.",
+      "esperado_herramientas": "Lisboa: 910 EUR. Oporto: 770 EUR.",
+      "esperado_agente_futuro": "Consultar candidatos y recomendar solo opciones compatibles."
+    },
+    {
+      "id": "playa",
+      "mensaje": "Cinco días en julio desde Madrid, dos viajeros, 1800 EUR en total, playa en el sur.",
+      "esperado_herramientas": "Barcelona y Atenas, consulta del mes 7 y estimación de costes.",
+      "esperado_agente_futuro": "Elegir consultas para justificar las propuestas."
+    },
+    {
+      "id": "informacion_incompleta",
+      "mensaje": "Quiero un viaje de naturaleza barato.",
+      "esperado_herramientas": "Búsqueda por naturaleza; sin estimar costes sin argumentos necesarios.",
+      "esperado_agente_futuro": "Preguntar por los datos necesarios."
+    },
+    {
+      "id": "sin_opciones",
+      "mensaje": "Cuatro días de cultura desde Madrid para dos viajeros por 100 EUR en total.",
+      "esperado_herramientas": "Todas las estimaciones superan el presupuesto.",
+      "esperado_agente_futuro": "Explicar que no hay opciones y no cambiar restricciones sin autorización."
+    },
+    {
+      "id": "cambio_preferencias",
+      "mensaje": "Tras consultar Lisboa en mayo, cambio a agosto y quiero playa.",
+      "esperado_herramientas": "Buscar playa y consultar Barcelona o Atenas en el mes 8.",
+      "esperado_agente_futuro": "Actualizar las consultas y conservar las demás preferencias confirmadas."
+    }
+  ]
+}

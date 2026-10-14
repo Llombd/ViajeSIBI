@@ -1,0 +1,1087 @@
+{
+  "tipo_datos": "ficticios",
+  "fuente": "Catálogo inventado para demostración universitaria; no representa precios ni clima reales.",
+  "moneda": "EUR",
+  "destinos": [
+    {
+      "id": "lisboa",
+      "nombre": "Lisboa",
+      "pais": "Portugal",
+      "region": "sur",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Lisboa",
+        "Actividad de demostración de gastronomia en Lisboa"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 6,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 14,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 18,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 22,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 25,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 25,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 21,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 11,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 7,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 65,
+        "gastos_por_persona_dia": 30,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 140
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "oporto",
+      "nombre": "Oporto",
+      "pais": "Portugal",
+      "region": "sur",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Oporto",
+        "Actividad de demostración de gastronomia en Oporto"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 3,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 19,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 14,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 55,
+        "gastos_por_persona_dia": 25,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 120
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "barcelona",
+      "nombre": "Barcelona",
+      "pais": "España",
+      "region": "sur",
+      "intereses": [
+        "cultura",
+        "playa"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Barcelona",
+        "Actividad de demostración de playa en Barcelona"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 7,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 18,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 85,
+        "gastos_por_persona_dia": 35,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 100
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "roma",
+      "nombre": "Roma",
+      "pais": "Italia",
+      "region": "sur",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Roma",
+        "Actividad de demostración de gastronomia en Roma"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 17,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 21,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 25,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 28,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 28,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 19,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 14,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 90,
+        "gastos_por_persona_dia": 35,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 180
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "florencia",
+      "nombre": "Florencia",
+      "pais": "Italia",
+      "region": "sur",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Florencia",
+        "Actividad de demostración de gastronomia en Florencia"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 7,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 18,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 85,
+        "gastos_por_persona_dia": 32,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 190
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "atenas",
+      "nombre": "Atenas",
+      "pais": "Grecia",
+      "region": "sur",
+      "intereses": [
+        "cultura",
+        "playa"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Atenas",
+        "Actividad de demostración de playa en Atenas"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 11,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 28,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 31,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 31,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 22,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 17,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 65,
+        "gastos_por_persona_dia": 28,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 220
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "paris",
+      "nombre": "París",
+      "pais": "Francia",
+      "region": "oeste",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en París",
+        "Actividad de demostración de gastronomia en París"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 17,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 21,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 15,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 6,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 120,
+        "gastos_por_persona_dia": 45,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 180
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "amsterdam",
+      "nombre": "Ámsterdam",
+      "pais": "Países Bajos",
+      "region": "oeste",
+      "intereses": [
+        "cultura",
+        "naturaleza"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Ámsterdam",
+        "Actividad de demostración de naturaleza en Ámsterdam"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 2,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 3,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 7,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 11,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 15,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 19,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 22,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 22,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 18,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 110,
+        "gastos_por_persona_dia": 40,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 200
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "bruselas",
+      "nombre": "Bruselas",
+      "pais": "Bélgica",
+      "region": "oeste",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Bruselas",
+        "Actividad de demostración de gastronomia en Bruselas"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 3,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 19,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 14,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 80,
+        "gastos_por_persona_dia": 32,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 160
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "berlin",
+      "nombre": "Berlín",
+      "pais": "Alemania",
+      "region": "centro",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Berlín",
+        "Actividad de demostración de gastronomia en Berlín"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 17,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 21,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 15,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 6,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 75,
+        "gastos_por_persona_dia": 30,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 190
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "praga",
+      "nombre": "Praga",
+      "pais": "Chequia",
+      "region": "centro",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Praga",
+        "Actividad de demostración de gastronomia en Praga"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 17,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 21,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 15,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 6,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 60,
+        "gastos_por_persona_dia": 25,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 170
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "viena",
+      "nombre": "Viena",
+      "pais": "Austria",
+      "region": "centro",
+      "intereses": [
+        "cultura",
+        "naturaleza"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Viena",
+        "Actividad de demostración de naturaleza en Viena"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 6,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 14,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 18,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 22,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 25,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 25,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 21,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 11,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 7,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 90,
+        "gastos_por_persona_dia": 35,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 200
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "budapest",
+      "nombre": "Budapest",
+      "pais": "Hungría",
+      "region": "centro",
+      "intereses": [
+        "cultura",
+        "gastronomia"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Budapest",
+        "Actividad de demostración de gastronomia en Budapest"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 7,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 24,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 27,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 23,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 18,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 55,
+        "gastos_por_persona_dia": 22,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 180
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "copenhague",
+      "nombre": "Copenhague",
+      "pais": "Dinamarca",
+      "region": "norte",
+      "intereses": [
+        "cultura",
+        "naturaleza"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Copenhague",
+        "Actividad de demostración de naturaleza en Copenhague"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": 0,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 1,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 9,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 13,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 17,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 20,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 11,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 6,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 2,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 115,
+        "gastos_por_persona_dia": 45,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 240
+        }
+      },
+      "tipo_datos": "ficticios"
+    },
+    {
+      "id": "estocolmo",
+      "nombre": "Estocolmo",
+      "pais": "Suecia",
+      "region": "norte",
+      "intereses": [
+        "cultura",
+        "naturaleza"
+      ],
+      "actividades": [
+        "Actividad de demostración de cultura en Estocolmo",
+        "Actividad de demostración de naturaleza en Estocolmo"
+      ],
+      "clima_mensual": {
+        "1": {
+          "temperatura_media_c": -1,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "2": {
+          "temperatura_media_c": 0,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "3": {
+          "temperatura_media_c": 4,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "4": {
+          "temperatura_media_c": 8,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "5": {
+          "temperatura_media_c": 12,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "6": {
+          "temperatura_media_c": 16,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "7": {
+          "temperatura_media_c": 19,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "8": {
+          "temperatura_media_c": 19,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "9": {
+          "temperatura_media_c": 15,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "10": {
+          "temperatura_media_c": 10,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "11": {
+          "temperatura_media_c": 5,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        },
+        "12": {
+          "temperatura_media_c": 1,
+          "tipo_dato": "clima típico ficticio; no es una previsión"
+        }
+      },
+      "costes": {
+        "alojamiento_por_persona_noche": 105,
+        "gastos_por_persona_dia": 42,
+        "transporte_ida_vuelta_por_persona": {
+          "Madrid": 260
+        }
+      },
+      "tipo_datos": "ficticios"
+    }
+  ]
+}
