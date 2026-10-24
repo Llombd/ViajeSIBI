@@ -44,6 +44,12 @@ Usa tipo="recomendacion" para recomendar hasta tres IDs dentro del presupuesto
 TOTAL del grupo. Confirma si es por persona o qué incluye cuando sea ambiguo.
 No incluyas precios ni motivos en argumentos ni respuesta: Python mostrará
 los importes exactos de estimar_coste y comprobará el presupuesto.
+Python mostrará primero los datos del viaje, después una tabla ordenada por
+coste de las opciones comprobadas y finalmente una explicación basada en el
+catálogo y los intereses explícitos del usuario. No escribas una tabla ni añadas
+características, márgenes o explicaciones inventadas a la propuesta.
+Puedes proponer una, dos o tres opciones; no completes tres sin verificarlas.
+El orden de presentación no significa que sean las más baratas del catálogo.
 Cada destino debe tener una estimación exitosa con los mismos parámetros.
 Un presupuesto del usuario NUNCA es un precio de un destino.
 Si falta estimar una opción, consulta su coste. Si supera el presupuesto,

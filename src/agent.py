@@ -9,6 +9,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from src.prompts import INSTRUCCIONES
+from src.presentacion import presentar_opciones
 from src.tools import (buscar_destinos, consultar_destino, estimar_coste,
                        _cargar_catalogo, _normalizar)
 
@@ -472,17 +473,12 @@ class AgenteViajes:
             return None, "Los datos de la propuesta no son válidos."
         if propuesta["tipo"] == "recomendacion" and presupuesto is None:
             return None, "Aclara el presupuesto total antes de recomendar opciones que lo cumplan."
-        if propuesta["tipo"] == "recomendacion":
-            # El importe del usuario autoriza el presupuesto, nunca un precio.
-            importes_usuario = []
-            for mensaje in self.historial:
-                if mensaje["role"] == "user" and not mensaje.get("interno"):
-                    for valor in re.findall(r"(\d+(?:[.,]\d+)*)\s*(?:EUR\b|euros?\b|€)", mensaje["content"], re.I):
-                        valor = valor.replace(".", "") if re.fullmatch(r"\d{1,3}(?:\.\d{3})+", valor) else valor
-                        valor = valor.replace(".", "").replace(",", ".") if "," in valor else valor
-                        importes_usuario.append(float(valor))
-            if not importes_usuario or presupuesto != importes_usuario[-1]:
-                return None, "Confirma el presupuesto total en EUR con el usuario; no lo inventes ni uses uno anterior."
+        presupuesto_usuario = self._presupuesto_usuario()
+        if presupuesto is not None and presupuesto != presupuesto_usuario:
+            return None, "Confirma el presupuesto total en EUR con el usuario; no lo inventes ni uses uno anterior."
+        # Una consulta de costes puede no incluir presupuesto en la propuesta,
+        # pero se muestra el ya indicado en la conversación, si existe.
+        presupuesto = presupuesto_usuario
 
         # La clave incluye TODOS los parámetros: nunca usar el precio de otro viaje.
         estimaciones = {}
@@ -520,14 +516,17 @@ class AgenteViajes:
                 return None, f"{destino_id} supera el presupuesto; consulta otra opción o explica la limitación."
             opciones.append((catalogo[destino_id], dato))
 
-        encabezado = "Destinos con coste comprobado:" if propuesta["tipo"] == "recomendacion" else "Costes comprobados:"
-        lineas = [encabezado]
-        for destino, dato in opciones:
-            lineas.append(f"- {destino['nombre']} ({destino['pais']}): {dato['total_grupo']:g} EUR "
-                          f"en total; {dato['total_por_persona']:g} EUR por persona.")
-            if propuesta["tipo"] == "recomendacion":
-                lineas.append(f"  Dentro del presupuesto total indicado de {presupuesto:g} EUR.")
-        lineas.append(f"Viaje desde {propuesta['origen']}: {propuesta['duracion_dias']} días, "
-                      f"{propuesta['viajeros']} viajeros. Incluye transporte de ida y vuelta, "
-                      "alojamiento y gastos diarios. Datos ficticios, no ofertas reales.")
-        return "\n".join(lineas), None
+        return presentar_opciones(
+            opciones, presupuesto, self._intereses_usuario(), propuesta["tipo"]
+        ), None
+
+    def _presupuesto_usuario(self):
+        """Reutiliza la comprobación existente, separada de los precios calculados."""
+        importes = []
+        for mensaje in self.historial:
+            if mensaje["role"] == "user" and not mensaje.get("interno"):
+                for valor in re.findall(r"(\d+(?:[.,]\d+)*)\s*(?:EUR\b|euros?\b|€)", mensaje["content"], re.I):
+                    valor = valor.replace(".", "") if re.fullmatch(r"\d{1,3}(?:\.\d{3})+", valor) else valor
+                    valor = valor.replace(".", "").replace(",", ".") if "," in valor else valor
+                    importes.append(float(valor))
+        return importes[-1] if importes else None
