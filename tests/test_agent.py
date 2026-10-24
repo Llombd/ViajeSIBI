@@ -1,0 +1,463 @@
+"""Pruebas sin Ollama: simulamos sus decisiones, no las del agente."""
+
+import copy
+import json
+import unittest
+from unittest.mock import patch, MagicMock
+from urllib.error import URLError
+
+from src.agent import AgenteViajes, ClienteOllama, ErrorOllama, ejecutar_herramienta
+
+
+def llamada(nombre, argumentos):
+    return {"role": "assistant", "content": "", "tool_calls": [
+        {"function": {"name": nombre, "arguments": argumentos}},
+    ]}
+
+
+def propuesta(ids, tipo="coste", presupuesto=None, dias=4, viajeros=2, origen="Madrid"):
+    return {"role": "assistant", "content": "", "propuesta": {
+        "tipo": tipo, "destinos": ids, "origen": origen,
+        "duracion_dias": dias, "viajeros": viajeros, "presupuesto_total": presupuesto,
+    }}
+
+
+def coste(destino, dias=4, viajeros=2):
+    return llamada("estimar_coste", {
+        "destino_id": destino, "origen": "Madrid", "duracion_dias": dias, "viajeros": viajeros,
+    })
+
+
+class ClienteSimulado:
+    def __init__(self, respuestas):
+        self.respuestas = iter(respuestas)
+        self.peticiones = []
+
+    def chat(self, mensajes):
+        self.peticiones.append(copy.deepcopy(mensajes))
+        respuesta = next(self.respuestas)
+        if isinstance(respuesta, Exception):
+            raise respuesta
+        return respuesta
+
+
+class TestAgente(unittest.TestCase):
+    def test_consultas_sucesivas_y_resultados(self):
+        cliente = ClienteSimulado([
+            llamada("consultar_destino", {"destino_id": "lisboa", "mes": 5}),
+            llamada("estimar_coste", {
+                "destino_id": "lisboa", "origen": "Madrid", "duracion_dias": 4, "viajeros": 2,
+            }),
+            propuesta(["lisboa"]),
+        ])
+        trazas = []
+        agente = AgenteViajes(cliente, mostrar=trazas.append)
+        self.assertIn("910", agente.responder("Consulta Lisboa en mayo para dos viajeros, cuatro días."))
+        resultado = cliente.peticiones[2][-1]
+        self.assertEqual(resultado["role"], "tool")
+        self.assertEqual(json.loads(resultado["content"])["total_grupo"], 910)
+        self.assertEqual(len(trazas), 4)
+        # No se obliga a buscar antes de consultar un destino conocido.
+        self.assertEqual(cliente.peticiones[1][-1]["tool_name"], "consultar_destino")
+
+    def test_respuesta_directa_e_historial(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "¿Cuál es tu presupuesto?"},
+            {"role": "assistant", "content": "He anotado tu presupuesto."},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Somos dos y salimos de Madrid.")
+        agente.responder("900 EUR en total.")
+        self.assertEqual(cliente.peticiones[1][1]["content"], "Somos dos y salimos de Madrid.")
+        self.assertEqual(cliente.peticiones[1][2]["content"], "¿Cuál es tu presupuesto?")
+
+    def test_validacion_no_ejecuta_argumentos_invalidos(self):
+        for nombre, argumentos in [
+            ("desconocida", {}),
+            ("consultar_destino", {"destino_id": "lisboa"}),
+            ("buscar_destinos", {"extra": 1}),
+            ("buscar_destinos", "no es objeto"),
+            ("consultar_destino", {"destino_id": "lisboa", "mes": True}),
+        ]:
+            with self.subTest(nombre=nombre, argumentos=argumentos):
+                self.assertIn("error", ejecutar_herramienta(nombre, argumentos))
+
+    def test_error_de_herramienta_vuelve_al_modelo(self):
+        cliente = ClienteSimulado([
+            llamada("consultar_destino", {"destino_id": "lisboa"}),
+            {"role": "assistant", "content": "¿En qué mes quieres viajar?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        self.assertIn("mes", agente.responder("Consulta Lisboa"))
+        self.assertIn("error", json.loads(cliente.peticiones[1][-1]["content"]))
+
+    def test_importe_inventado_se_devuelve_al_modelo(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "Lisboa cuesta 850 EUR."},
+            llamada("estimar_coste", {
+                "destino_id": "lisboa", "origen": "Madrid", "duracion_dias": 4, "viajeros": 2,
+            }),
+            propuesta(["lisboa"]),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        self.assertIn("910", agente.responder("Lisboa desde Madrid para dos, cuatro días."))
+        self.assertIn("estructurada", cliente.peticiones[1][-1]["content"])
+
+    def test_caso_reportado_bloquea_bruselas_y_busca_alternativa(self):
+        cliente = ClienteSimulado([
+            llamada("buscar_destinos", {"region": "oeste", "intereses": ["cultura"]}),
+            coste("paris"), coste("amsterdam"),
+            {"role": "assistant", "content": "Recomiendo Bruselas, cuesta 800 €."},
+            propuesta(["bruselas"], "recomendacion", 800),
+            coste("bruselas"),
+            propuesta(["bruselas"], "recomendacion", 800),
+            coste("oporto"),
+            propuesta(["oporto"], "recomendacion", 800),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        respuesta = agente.responder(
+            "Quiero viajar 4 días desde Madrid con otra persona. Tenemos 800 € "
+            "en total y nos gustan las ciudades culturales. ¿Qué destinos recomiendas?"
+        )
+        self.assertIn("Oporto", respuesta)
+        self.assertIn("770 EUR", respuesta)
+        self.assertNotIn("Bruselas", respuesta)
+        self.assertNotIn("800 €", respuesta)
+        resultados = [m for m in agente.historial if m["role"] == "tool"]
+        encontrados = json.loads(resultados[0]["content"])["destinos"]
+        self.assertEqual(len(encontrados), 15)
+        # La salida inválida no queda como respuesta aceptada en el historial.
+        self.assertFalse(any("cuesta 800" in m["content"] for m in agente.historial))
+
+    def test_precio_de_otro_destino_no_respalda_bruselas(self):
+        cliente = ClienteSimulado([
+            coste("paris"),
+            {"role": "assistant", "content": "Bruselas cuesta 1440 EUR."},
+            propuesta(["bruselas"]),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=3)
+        respuesta = agente.responder("Consulta precios desde Madrid para dos y cuatro días.")
+        self.assertIn("límite", respuesta)
+        self.assertNotIn("Bruselas", respuesta)
+        self.assertNotIn("1440", respuesta)
+
+    def test_no_afirma_compatibilidad_sin_estimar(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "Bruselas cumple tu presupuesto."},
+            propuesta(["bruselas"], "recomendacion", 800),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+        respuesta = agente.responder("Tengo 800 EUR en total, cuatro días desde Madrid, dos personas.")
+        self.assertIn("límite", respuesta)
+        self.assertNotIn("Bruselas", respuesta)
+
+    def test_no_acepta_estimacion_de_otros_parametros(self):
+        for cambios in ({"dias": 3}, {"viajeros": 1}, {"origen": "Bilbao"}):
+            with self.subTest(cambios=cambios):
+                cliente = ClienteSimulado([coste("oporto"), propuesta(["oporto"], **cambios)])
+                agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+                self.assertIn("límite", agente.responder("Consulta Oporto"))
+
+    def test_destino_fuera_de_presupuesto_se_rechaza(self):
+        cliente = ClienteSimulado([
+            coste("bruselas"), propuesta(["bruselas"], "recomendacion", 800),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+        respuesta = agente.responder("Presupuesto de 800 EUR en total.")
+        self.assertIn("límite", respuesta)
+        self.assertNotIn("Dentro del presupuesto", respuesta)
+
+    def test_presupuesto_inventado_o_anterior_no_se_acepta(self):
+        cliente = ClienteSimulado([
+            coste("oporto"), propuesta(["oporto"], "recomendacion", 1000),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+        self.assertIn("límite", agente.responder("Ahora solo tenemos 700 EUR en total."))
+
+    def test_propuesta_usa_precio_de_herramienta_ignora_texto_llm(self):
+        final = propuesta(["oporto"], "recomendacion", 800)
+        final["content"] = "Oporto cuesta 800 EUR y Bruselas es gratis."
+        cliente = ClienteSimulado([coste("oporto"), final])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        respuesta = agente.responder("800 EUR de presupuesto total.")
+        self.assertIn("770 EUR", respuesta)
+        self.assertNotIn("gratis", respuesta)
+        self.assertNotIn("Bruselas", respuesta)
+
+    def test_region_explicita_se_conserva(self):
+        cliente = ClienteSimulado([
+            llamada("buscar_destinos", {"region": "sur", "intereses": ["cultura"]}),
+            {"role": "assistant", "content": "¿Cuál es tu presupuesto?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Quiero ciudades culturales del sur de Europa.")
+        encontrados = json.loads(cliente.peticiones[1][-1]["content"])["destinos"]
+        self.assertTrue(all(d["region"] == "sur" for d in encontrados))
+        self.assertEqual(len(encontrados), 6)
+
+    def test_region_se_conserva_en_sesion_y_se_puede_quitar(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "¿Desde dónde quieres salir?"},
+            llamada("buscar_destinos", {"region": "sur"}),
+            {"role": "assistant", "content": "¿Cuál es tu presupuesto?"},
+            llamada("buscar_destinos", {"region": "sur"}),
+            {"role": "assistant", "content": "¿Cuántos días quieres viajar?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Quiero viajar al sur de Europa.")
+        agente.responder("Cultura")
+        self.assertEqual(agente._regiones_usuario(), {"sur"})
+        agente.responder("Ahora cualquier región de toda Europa.")
+        encontrados = json.loads(cliente.peticiones[-1][-1]["content"])["destinos"]
+        self.assertEqual(len(encontrados), 15)
+
+    def test_correcciones_internas_no_autorizan_region_ni_presupuesto(self):
+        agente = AgenteViajes(ClienteSimulado([]), mostrar=lambda texto: None)
+        agente.historial.extend([
+            {"role": "user", "content": "Tenemos 800 EUR en total."},
+            {"role": "user", "interno": True, "content": "Error: región oeste; 1200 EUR."},
+        ])
+        self.assertEqual(agente._regiones_usuario(), set())
+        _, error = agente._redactar_propuesta(
+            propuesta(["oporto"], "recomendacion", 1200)["propuesta"]
+        )
+        self.assertIn("presupuesto", error)
+
+    def test_estimar_error_no_crea_precio_valido(self):
+        cliente = ClienteSimulado([
+            llamada("estimar_coste", {
+                "destino_id": "oporto", "origen": "Bilbao", "duracion_dias": 4, "viajeros": 2,
+            }),
+            propuesta(["oporto"], origen="Bilbao"),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+        self.assertIn("límite", agente.responder("Consulta Oporto desde Bilbao."))
+
+    def test_viaje_barato_dos_turnos_sin_intereses_inventados(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "¿Cuántos días, viajeros y qué región prefieres?"},
+            {"role": "assistant", "content": "¿Desde dónde salís, cuántos sois, cuántos días y qué presupuesto total tenéis?"},
+            llamada("buscar_destinos", {
+                "region": "oeste", "intereses": ["cultura", "gastronomia", "playa", "naturaleza"],
+            }),
+            coste("oporto"),
+            propuesta(["oporto"], "recomendacion", 800),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        pregunta = agente.responder("Quiero hacer un viaje barato por Europa.")
+        self.assertIn("presupuesto", pregunta)
+        self.assertNotIn("región", pregunta)
+        respuesta = agente.responder(
+            "Somos 2 personas, queremos viajar 4 días, salimos desde Madrid y tenemos "
+            "un presupuesto máximo de 800 € en total. Nos da igual la región."
+        )
+        self.assertIn("770 EUR", respuesta)
+        self.assertIn("4 días, 2 viajeros", respuesta)
+        self.assertIn("Madrid", respuesta)
+        self.assertEqual(agente._faltan_datos_imprescindibles(), [])
+        # Se ejecutó y registró la llamada corregida, sin región ni intereses.
+        llamadas = [c["function"] for m in agente.historial for c in m.get("tool_calls", [])]
+        self.assertEqual(llamadas[0]["arguments"], {})
+        resultado = json.loads(cliente.peticiones[3][-1]["content"])
+        self.assertEqual(len(resultado["destinos"]), 15)
+        self.assertTrue(any("salimos desde Madrid" in m["content"]
+                            for m in cliente.peticiones[-1] if m["role"] == "user"))
+
+    def test_solo_conserva_intereses_explicitos(self):
+        cliente = ClienteSimulado([
+            llamada("buscar_destinos", {"intereses": ["cultura", "playa"]}),
+            {"role": "assistant", "content": "¿Desde dónde quieres salir?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Nos gustan las ciudades culturales.")
+        funcion = agente.historial[2]["tool_calls"][0]["function"]
+        self.assertEqual(funcion["arguments"], {"intereses": ["cultura"]})
+        self.assertEqual(len(json.loads(cliente.peticiones[1][-1]["content"])["destinos"]), 15)
+
+    def test_exclusion_no_se_convierte_en_interes(self):
+        cliente = ClienteSimulado([
+            llamada("buscar_destinos", {"intereses": ["cultura", "playa"]}),
+            {"role": "assistant", "content": "¿Cuántos días quieres viajar?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Nos gusta la cultura, pero no queremos playa.")
+        self.assertEqual(agente.historial[2]["tool_calls"][0]["function"]["arguments"],
+                         {"intereses": ["cultura"]})
+
+    def test_intereses_persisten_sin_inventar_nuevos(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "¿Desde dónde salís?"},
+            llamada("buscar_destinos", {"intereses": ["gastronomia", "naturaleza"]}),
+            {"role": "assistant", "content": "¿Qué presupuesto tenéis?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Nos gusta la gastronomía.")
+        agente.responder("Somos 2 personas y salimos desde Madrid por 4 días.")
+        funcion = agente.historial[4]["tool_calls"][0]["function"]
+        self.assertEqual(funcion["arguments"], {"intereses": ["gastronomia"]})
+
+    def test_indiferencia_regional_elimina_preferencia_anterior(self):
+        for frase in ("Nos da igual la región", "La región me da igual", "Me da igual la región"):
+            with self.subTest(frase=frase):
+                cliente = ClienteSimulado([
+                    {"role": "assistant", "content": "¿Cuántos días viajarás?"},
+                    llamada("buscar_destinos", {"region": "sur"}),
+                    {"role": "assistant", "content": "¿Desde dónde sales?"},
+                ])
+                agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+                agente.responder("Me gustaría el sur de Europa.")
+                agente.responder(frase)
+                self.assertEqual(agente._regiones_usuario(), set())
+                self.assertEqual(len(json.loads(cliente.peticiones[-1][-1]["content"])["destinos"]), 15)
+
+    def test_mensajes_del_agente_no_crean_intereses(self):
+        agente = AgenteViajes(ClienteSimulado([]), mostrar=lambda texto: None)
+        agente.historial.extend([
+            {"role": "assistant", "content": "cultura, gastronomia, playa, naturaleza"},
+            {"role": "user", "interno": True, "content": "Intereses: cultura y playa"},
+            {"role": "user", "content": "Quiero un viaje barato."},
+        ])
+        self.assertEqual(agente._intereses_usuario(), set())
+        self.assertEqual(agente._ajustar_filtros_busqueda({"intereses": ["cultura", "playa"]}), {})
+
+    def test_busqueda_vacia_revisa_filtros_sin_descartar_gustos(self):
+        cliente = ClienteSimulado([
+            llamada("buscar_destinos", {
+                "intereses": ["cultura", "gastronomia", "playa", "naturaleza"],
+            }),
+            {"role": "assistant", "content": "No hay destinos disponibles."},
+            {"role": "assistant", "content": "No hay coincidencias con estos filtros. ¿Queréis flexibilizar los intereses?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        respuesta = agente.responder(
+            "Queremos cultura, gastronomía, playa y naturaleza. Somos 2 personas, "
+            "4 días desde Madrid, 800 EUR en total."
+        )
+        self.assertIn("sin coincidencias", cliente.peticiones[1][-1]["content"].lower())
+        self.assertIn("Revisa si son necesarios", cliente.peticiones[2][-1]["content"])
+        self.assertIn("flexibilizar", respuesta)
+        self.assertNotIn("No hay destinos disponibles", respuesta)
+        llamadas = [c for m in agente.historial for c in m.get("tool_calls", [])]
+        self.assertEqual(len(llamadas), 1)  # No se borran gustos explícitos ni se fuerza otra consulta.
+
+    def test_no_concluye_ausencia_sin_consultar_catalogo(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "No hay destinos disponibles."},
+            llamada("buscar_destinos", {}),
+            {"role": "assistant", "content": "¿Cuál es tu presupuesto?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        respuesta = agente.responder("Quiero un viaje barato por Europa.")
+        self.assertNotIn("No hay destinos", respuesta)
+        self.assertEqual(len(json.loads(cliente.peticiones[-1][-1]["content"])["destinos"]), 15)
+
+    def test_quitar_intereses_tras_busqueda_vacia_permite_buscar_todos(self):
+        cliente = ClienteSimulado([
+            llamada("buscar_destinos", {"intereses": ["cultura", "playa", "naturaleza"]}),
+            {"role": "assistant", "content": "No hay coincidencias con estos filtros. ¿Queréis flexibilizarlos?"},
+            llamada("buscar_destinos", {"intereses": ["cultura", "playa", "naturaleza"]}),
+            coste("oporto"),
+            propuesta(["oporto"], "recomendacion", 800),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Nos gustan cultura, playa y naturaleza. Somos 2 personas, 4 días desde Madrid, 800 EUR.")
+        respuesta = agente.responder("Ahora sin intereses concretos, y nos da igual la región.")
+        self.assertIn("770 EUR", respuesta)
+        busquedas = [c["function"] for m in agente.historial for c in m.get("tool_calls", [])
+                     if c["function"]["name"] == "buscar_destinos"]
+        self.assertEqual(busquedas[-1]["arguments"], {})
+
+    def test_limite_consultas(self):
+        cliente = ClienteSimulado([llamada("buscar_destinos", {})] * 2)
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+        self.assertIn("límite", agente.responder("Busca destinos"))
+        self.assertEqual(len(cliente.peticiones), 2)
+
+    def test_limite_herramientas_en_un_lote(self):
+        respuesta = llamada("buscar_destinos", {})
+        respuesta["tool_calls"] *= 3
+        cliente = ClienteSimulado([respuesta])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_herramientas=1)
+        with patch("src.agent.ejecutar_herramienta", return_value={"destinos": []}) as ejecutar:
+            self.assertIn("límite", agente.responder("Busca"))
+            self.assertEqual(ejecutar.call_count, 1)
+        resultados = [m for m in agente.historial if m["role"] == "tool"]
+        self.assertEqual(len(resultados), 3)
+        self.assertIn("error", json.loads(resultados[-1]["content"]))
+
+    def test_fallo_conexion_conserva_sesion_anterior(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "Hola"},
+            llamada("buscar_destinos", {}),
+            ErrorOllama("Sin conexión"),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Hola")
+        anterior = copy.deepcopy(agente.historial)
+        with self.assertRaises(ErrorOllama):
+            agente.responder("Busca destinos")
+        self.assertEqual(agente.historial, anterior)
+
+    def test_cliente_envia_configuracion_y_no_guarda_thinking(self):
+        respuesta = MagicMock()
+        respuesta.__enter__.return_value.read.return_value = json.dumps({
+            "message": {"role": "assistant", "content": json.dumps({
+                "herramienta": "ninguna", "argumentos": {}, "respuesta": "Hola",
+            }), "thinking": "No mostrar"},
+        }).encode()
+        with patch("src.agent.urlopen", return_value=respuesta) as abrir:
+            mensaje = ClienteOllama().chat([{"role": "user", "content": "Hola"}])
+        datos = json.loads(abrir.call_args.args[0].data)
+        self.assertEqual(datos["model"], "qwen3:4b")
+        self.assertFalse(datos["think"])
+        self.assertFalse(datos["stream"])
+        self.assertEqual(len(datos["format"]["properties"]["herramienta"]["enum"]), 4)
+        self.assertIn("estimar_coste", datos["messages"][0]["content"])
+        self.assertNotIn("thinking", mensaje)
+
+    def test_cliente_conserva_propuesta_estructurada(self):
+        final = propuesta(["oporto"], "recomendacion", 800)
+        respuesta = MagicMock()
+        respuesta.__enter__.return_value.read.return_value = json.dumps({
+            "message": {"role": "assistant", "content": json.dumps({
+                "herramienta": "ninguna", "argumentos": final["propuesta"], "respuesta": "",
+            })},
+        }).encode()
+        with patch("src.agent.urlopen", return_value=respuesta) as abrir:
+            recibido = ClienteOllama().chat([
+                {"role": "system", "content": "Instrucciones"},
+                final,
+                {"role": "user", "content": "Gracias"},
+            ])
+        self.assertEqual(recibido["propuesta"], final["propuesta"])
+        datos = json.loads(abrir.call_args.args[0].data)
+        anterior = json.loads(datos["messages"][1]["content"])
+        self.assertEqual(anterior["argumentos"], final["propuesta"])
+
+    def test_cliente_rechaza_salida_truncada(self):
+        respuesta = MagicMock()
+        respuesta.__enter__.return_value.read.return_value = json.dumps({
+            "done_reason": "length",
+            "message": {"role": "assistant", "content": "Respuesta incompleta"},
+        }).encode()
+        with patch("src.agent.urlopen", return_value=respuesta):
+            with self.assertRaises(ErrorOllama):
+                ClienteOllama().chat([])
+
+    def test_cliente_error_conexion(self):
+        with patch("src.agent.urlopen", side_effect=URLError("Sin conexión")):
+            with self.assertRaises(ErrorOllama):
+                ClienteOllama().chat([])
+
+    def test_cliente_rechaza_llamada_mal_formada(self):
+        respuesta = MagicMock()
+        respuesta.__enter__.return_value.read.return_value = json.dumps({
+            "message": {"role": "assistant", "tool_calls": [{"function": None}]},
+        }).encode()
+        with patch("src.agent.urlopen", return_value=respuesta):
+            with self.assertRaises(ErrorOllama):
+                ClienteOllama().chat([])
+
+
+if __name__ == "__main__":
+    unittest.main()

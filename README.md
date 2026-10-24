@@ -2,13 +2,13 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1 y 2 implementadas (definición, catálogo y herramientas). Las 11 pruebas pasan. No hay un LLM conectado ni una conversación ejecutable.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal con Ollama local y qwen3:4b. Pasan 44 pruebas, incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
-Un **LLM** es un modelo de lenguaje ya entrenado. Una **herramienta** es una función que consulta datos o realiza un cálculo. El futuro **agente** combinará el LLM, herramientas, instrucciones e historial en un bucle de decisiones. No entrenaremos un modelo desde cero.
+Un **LLM** es un modelo de lenguaje ya entrenado. Una **herramienta** es una función que consulta datos o realiza un cálculo. El **agente** combina el LLM, herramientas, instrucciones e historial en un bucle de decisiones. No entrenamos un modelo desde cero.
 
-Las herramientas pueden usar filtros y fórmulas. La parte agéntica estará en que el LLM elija qué consultar, observe los resultados y decida si necesita otra herramienta, una aclaración o una respuesta final.
+Las herramientas usan filtros y fórmulas. La parte agéntica está en que el LLM elige qué consultar, observa los resultados y decide si necesita otra herramienta, una aclaración o una respuesta final.
 
 ## Alcance
 
@@ -20,11 +20,11 @@ Las herramientas pueden usar filtros y fórmulas. La parte agéntica estará en 
 - Preferencias previstas: origen, fechas o mes, duración, viajeros, presupuesto, región e intereses.
 - Sin reservas ni pagos. Incorporaremos alguna fuente externa real después de validar el agente.
 
-Si faltan datos necesarios, el futuro agente preguntará. Si no hay opciones viables, lo explicará y propondrá qué restricción flexibilizar, sin cambiarla por su cuenta.
+Las instrucciones piden al agente que pregunte si faltan datos necesarios y explique si no hay opciones viables, sin cambiar restricciones por su cuenta. El cumplimiento de estas instrucciones se evaluará con más detalle en las etapas 4 y 5.
 
 ## Arquitectura
 
-Python y biblioteca estándar bastan para las etapas actuales. El catálogo está en JSON. En la etapa 3 añadiremos un proveedor de LLM con llamadas a herramientas; la propuesta inicial contempla el SDK de OpenAI y Responses API, con modelo configurable.
+Usamos Python y su biblioteca estándar, sin dependencias externas. El catálogo está en JSON. El modelo qwen3:4b se ejecuta en Ollama local. Python envía peticiones HTTP a http://localhost:11434/api/chat mediante urllib.request. No se usa un SDK, una API de pago ni claves.
 
 ~~~text
 Usuario ↔ interfaz ↔ controlador del bucle ↔ LLM
@@ -40,7 +40,7 @@ Usuario ↔ interfaz ↔ controlador del bucle ↔ LLM
 
 El controlador ejecutará únicamente herramientas registradas, validará argumentos y devolverá resultados al modelo. El historial permitirá reutilizar información.
 
-El bucle futuro será:
+El bucle implementado funciona así:
 
 1. Recibir el mensaje y añadirlo al historial.
 2. Consultar al LLM con instrucciones, historial y herramientas disponibles.
@@ -48,9 +48,27 @@ El bucle futuro será:
 4. Si pide una aclaración, mostrarla y esperar al usuario.
 5. Si entrega la recomendación, terminar el turno.
 
-Como límites iniciales proponemos seis llamadas al modelo y diez ejecuciones de herramientas por turno. No habrá una secuencia fija que obligue a usar las tres herramientas siempre. Registraremos acciones observables y errores, sin solicitar razonamiento interno.
+Los límites son doce llamadas al modelo y diez intentos de ejecución de herramientas por turno; las llamadas inválidas también cuentan. Cada petición HTTP tiene un tiempo de espera de 120 segundos, sin reintentos automáticos. Al alcanzar un límite, el programa detiene el turno y lo explica. No hay una secuencia fija de herramientas. La terminal muestra nombres, argumentos y resultados.
 
-La [documentación oficial de llamadas a herramientas](https://developers.openai.com/api/docs/guides/function-calling) explica el intercambio entre modelo, aplicación y resultados.
+El modelo elige una acción por consulta mediante un objeto JSON con herramienta, argumentos y respuesta. Para una respuesta final con precios, argumentos contiene una propuesta estructurada (tipo, destinos, origen, duracion_dias, viajeros y presupuesto_total); Python genera el texto mostrado. herramienta puede ser cualquiera de las tres funciones o ninguna para preguntar o responder. Se usa un esquema en el campo format de Ollama, según su [documentación de salidas estructuradas](https://docs.ollama.com/capabilities/structured-outputs). No usamos llamadas nativas: en la prueba con la plantilla instalada, el modelo generaba razonamiento largo en texto. El formato JSON permitió obtener decisiones ejecutables sin imponer una secuencia de herramientas.
+
+Usamos think: false según la [documentación de thinking](https://docs.ollama.com/capabilities/thinking) y /no_think en las instrucciones, un interruptor descrito por [Qwen3](https://qwenlm.github.io/blog/qwen3/). stream: false permite recibir una respuesta completa. El contexto está configurado en 8192 tokens y la salida en un máximo de 1024 tokens por consulta. Son ajustes iniciales para el Mac de 8 GB, no una garantía de consumo o rendimiento. Si Ollama indica que la salida fue truncada, el cliente devuelve un error en vez de presentar una respuesta incompleta.
+
+El historial vive en memoria durante la sesión; no se guarda en disco. El cliente conserva mensajes, llamadas y resultados y no muestra el campo thinking. Las conversaciones muy largas pueden superar la ventana de contexto del modelo: no hay resumen automático en esta etapa. Si una petición falla, se descarta el turno fallido y se conservan los anteriores.
+
+Las recomendaciones y los precios no se aceptan en texto libre. Cada ID propuesto debe tener un resultado exitoso de estimar_coste para el mismo origen, duración y viajeros. Python redacta los importes exactos de ese resultado; no utiliza precios escritos por el modelo ni convierte el presupuesto del usuario en un precio.
+
+Para tipo=recomendacion, además se comprueba que el coste total de cada destino no supere el presupuesto total expresado por el usuario. Para tipo=coste, se puede mostrar un coste consultado aunque supere el presupuesto, sin recomendarlo ni afirmar que cumple. Se ignora el texto libre que acompañe una propuesta estructurada: no puede sustituir los datos verificados.
+
+Una validación fallida bloquea toda la propuesta, elimina el texto inválido del historial y devuelve el motivo al LLM. El modelo puede consultar otras opciones. Si agota los límites, solo se muestra el mensaje de límite, nunca la propuesta rechazada. No se fuerza una secuencia de herramientas.
+
+Antes de ejecutar buscar_destinos, se elimina una región propuesta por el modelo si no aparece explícitamente en los mensajes del usuario. Se reconocen sur, oeste, centro y norte, además de expresiones como Europa occidental. Una preferencia explícita persiste entre turnos; frases como cualquier región, toda Europa o nos da igual la región eliminan esa restricción. El programa no deduce una región de la ciudad de salida. Esta comprobación es deliberadamente sencilla; ante expresiones ambiguas el agente debe preguntar.
+
+Los intereses también se contrastan con los mensajes reales del usuario, nunca con ejemplos del prompt, preguntas del agente o correcciones internas. Se reconocen cultura/cultural/culturales, gastronomía y sus adjetivos, playa(s) y naturaleza. Los filtros no respaldados se eliminan antes de ejecutar y registrar la búsqueda. «Barato por Europa» no implica ninguno de esos intereses: permite buscar_destinos({}). Las exclusiones simples como «no queremos playa» no se convierten en intereses positivos. «Sin intereses concretos» elimina una preferencia anterior. Es una comprobación conservadora con vocabulario limitado; no pretende interpretar cualquier expresión de gustos.
+
+Si una búsqueda devuelve una lista vacía, el resultado avisa al LLM de que revise sus filtros. La validación bloquea conclusiones generales sobre la ausencia de destinos si no se ha buscado o si la última consulta tenía filtros. Se puede explicar que no hay coincidencias con esos filtros y preguntar si el usuario desea flexibilizar preferencias explícitas. El programa no elimina gustos auténticos ni ejecuta una secuencia fija de herramientas para conseguir coincidencias.
+
+Las preguntas deben priorizar origen, duración, viajeros y presupuesto. Región e intereses son opcionales. Una comprobación sencilla de las menciones en los mensajes del usuario impide exigir estos filtros antes de completar los datos esenciales. El LLM sigue interpretando los valores y conserva el historial de la sesión; los costes solo se muestran tras la validación ya descrita.
 
 ## Herramientas implementadas
 
@@ -83,7 +101,7 @@ viajeros × (
 
 ## Cinco casos de uso
 
-Estos cinco casos concretan el alcance acordado; no estaban redactados previamente. Se guardan también en evals/casos.json. El comportamiento conversacional es una expectativa para la etapa 3, no una función implementada.
+Estos cinco casos concretan el alcance acordado y se guardan también en evals/casos.json. Sirven para probar el agente; su evaluación sistemática sigue pendiente.
 
 | Caso | Petición | Resultado esperado |
 | --- | --- | --- |
@@ -99,7 +117,7 @@ Estos cinco casos concretan el alcance acordado; no estaban redactados previamen
 | --- | --- | --- |
 | 1. Definición | Objetivo, alcance y cinco casos de uso. Documentados. | Casos con resultados esperados. Los requisitos de la asignatura aún deben contrastarse con su enunciado. |
 | 2. Datos y herramientas | Catálogo y tres funciones locales implementados; 11 pruebas verificadas. | Consultas, cálculos y errores comprobados con pruebas. |
-| 3. Bucle mínimo | Conectar LLM, historial, validación y límites. Pendiente. | Llamadas elegidas por el modelo, resultados devueltos y respuesta final. |
+| 3. Bucle mínimo | Ollama, qwen3:4b, historial, validación, límites y terminal implementados. | Llamadas elegidas por el modelo, resultados devueltos y respuesta final; pruebas del bucle sin servidor. |
 | 4. Calidad de conversación | Aclaraciones, cambios de preferencias y respuesta fundamentada. Pendiente. | Manejar datos incompletos y restricciones incompatibles. |
 | 5. Evaluación | Casos, registros, calidad, latencia y consumo. Pendiente. | Informe con resultados, errores y mejoras. |
 | 6. Presentación | Memoria, demostración e interfaz sencilla si queda tiempo. Pendiente. | Ejecución documentada y explicación del bucle. |
@@ -113,16 +131,17 @@ README.md              Objetivo, arquitectura, casos y ejecución
 src/
   __init__.py          Identifica el paquete Python
   tools.py             Tres herramientas locales
-  main.py              Solo descripción; interfaz pendiente
-  agent.py             Solo descripción; bucle pendiente
-  prompts.py           Solo descripción; instrucciones pendientes
+  main.py              Conversación interactiva y manejo de errores
+  agent.py             Cliente HTTP de Ollama, schemas, validación y bucle
+  prompts.py           Instrucciones en español para el modelo
 data/
   destinos.json        Los 15 destinos y todos los datos ficticios
 tests/
-  test_tools.py        Pruebas con unittest
+  test_tools.py        Las 11 pruebas originales de herramientas
+  test_agent.py        33 pruebas del bucle, cliente y regresiones con respuestas simuladas
 evals/
   casos.json           Cinco escenarios; sin evaluador automático del LLM
-.env.example           Indica que aún no se necesitan credenciales
+.env.example           Indica que Ollama local no necesita credenciales
 .gitignore             Excluye cachés, entorno virtual y secretos
 pyproject.toml         Metadatos y Python mínimo; sin dependencias externas
 ~~~
@@ -136,7 +155,7 @@ cd /Users/lucia/Documents/viajeSIBI
 python3 -m unittest discover -s tests -v
 ~~~
 
-Hay 11 pruebas para el catálogo, filtros, clima mensual, cálculo de costes, viaje de un día, argumentos inválidos y rutas ausentes. Se han ejecutado correctamente: 11 pruebas, resultado OK.
+Hay 44 pruebas. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
 
 Ejemplo de uso en Python, desde la carpeta del proyecto:
 
@@ -148,4 +167,45 @@ print(consultar_destino("lisboa", mes=5))
 print(estimar_coste("lisboa", origen="Madrid", duracion_dias=4, viajeros=2))
 ~~~
 
-El siguiente paso será, en la etapa 3, conectar el LLM e implementar su bucle. No hay llamadas externas implementadas.
+## Ejecutar el agente con Ollama
+
+Con Python 3.10 o posterior y el modelo ya descargado, abre la aplicación Ollama en tu Mac. Si prefieres iniciar el servidor desde la terminal:
+
+~~~bash
+ollama serve
+~~~
+
+Déjalo ejecutándose y abre otra terminal. Si indica que el puerto ya está ocupado, normalmente Ollama ya está abierto; no necesitas un segundo servidor.
+
+Comprueba el modelo y ejecuta el agente:
+
+~~~bash
+ollama list
+cd /Users/lucia/Documents/viajeSIBI
+python3 -m src.main
+~~~
+
+La lista debe incluir qwen3:4b. Ya está descargado en este proyecto; si alguna vez falta, se puede descargar con ollama pull qwen3:4b. No hace falta ejecutar ollama run por separado.
+
+Escribe, por ejemplo:
+
+> Quiero cuatro días de cultura en mayo desde Madrid para dos personas, con 900 euros en total incluyendo transporte, alojamiento y gastos diarios. Recomiéndame un destino.
+
+La terminal mostrará líneas como [Herramienta] buscar_destinos(...) y [Resultado] con los datos. Las llamadas exactas las decide el modelo. Después pregunta:
+
+> ¿Y cuánto costaría Lisboa manteniendo esos mismos datos?
+
+Esto permite observar si reutiliza las preferencias del historial. Escribe salir para terminar; también puedes usar Ctrl+C. El historial se pierde al cerrar el programa.
+
+La regresión automatizada reproduce la petición de cuatro días desde Madrid, dos personas y 800 EUR en total: rechaza Bruselas sin estimación, vuelve a rechazarla si supera el presupuesto y permite continuar hasta recomendar Oporto con su coste calculado de 770 EUR. La búsqueda se realiza sin región si el usuario no la indicó.
+
+La misma petición se ha probado con Ollama y qwen3:4b: buscó destinos culturales sin región, intentó propuestas que fueron bloqueadas, consultó Lisboa (910 EUR, fuera del presupuesto) y después Oporto (770 EUR). La respuesta final mostró únicamente Oporto, con 770 EUR para el grupo y 385 EUR por persona. Las llamadas exactas pueden variar entre ejecuciones; el límite sigue impidiendo bucles infinitos.
+
+El fallo anterior ocurría porque el validador reunía importes de toda la conversación, incluido el presupuesto del usuario, sin asociarlos a destinos o parámetros. Además, el filtro regional dependía únicamente del prompt y seis consultas dejaban poco margen para las correcciones. La solución mantiene la elección de herramientas en el LLM y traslada la comprobación y presentación de precios al programa.
+
+Estos cambios corrigen la validación y presentación de precios. La interpretación de preferencias por el modelo y la comprensión de expresiones ambiguas siguen requiriendo evaluación en la etapa 4.
+Si no conecta, comprueba que Ollama está abierto. Si hay un error HTTP, revisa ollama list y tu versión de Ollama: debe admitir herramientas y el parámetro think. No se utiliza una conexión externa para inferencia ni para las herramientas del catálogo.
+
+El siguiente paso es mejorar y evaluar la calidad de la conversación en la etapa 4. La conexión local y el bucle están implementados; la fuente de viajes sigue siendo ficticia.
+
+La regresión de «Quiero hacer un viaje barato por Europa» usa respuestas simuladas: primero rechaza exigir región mientras faltan datos esenciales; después, con Madrid, 4 días, 2 personas, 800 EUR y región indiferente, corrige una llamada que inventaba los cuatro intereses y ejecuta la búsqueda sin filtros. Recupera los 15 destinos y permite mostrar Oporto por 770 EUR únicamente después de estimar_coste. Esta corrección se ha verificado con pruebas automáticas, sin una nueva ejecución del modelo real.

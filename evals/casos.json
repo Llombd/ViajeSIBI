@@ -1,5 +1,5 @@
 {
-  "nota": "Casos de uso. El comportamiento del LLM se implementará en la etapa 3.",
+  "nota": "Casos de uso para probar el agente de la etapa 3. La evaluación sistemática de la calidad está pendiente.",
   "casos": [
     {
       "id": "cultura_presupuesto",
