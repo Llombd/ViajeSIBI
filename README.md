@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal con Ollama local y qwen3:4b. Pasan 58 pruebas, incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal con Ollama local y qwen3:4b. Pasan 72 pruebas, incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -139,7 +139,7 @@ data/
   destinos.json        Los 15 destinos y todos los datos ficticios
 tests/
   test_tools.py        Las 11 pruebas originales de herramientas
-  test_agent.py        33 pruebas del bucle, cliente y regresiones con respuestas simuladas
+  test_agent.py        47 pruebas del bucle, cliente y regresiones con respuestas simuladas
   test_presentacion.py 14 pruebas del formato, márgenes y datos mostrados
 evals/
   casos.json           Cinco escenarios; sin evaluador automático del LLM
@@ -157,7 +157,7 @@ cd /Users/lucia/Documents/viajeSIBI
 python3 -m unittest discover -s tests -v
 ~~~
 
-Hay 58 pruebas. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
+Hay 72 pruebas. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
 
 Ejemplo de uso en Python, desde la carpeta del proyecto:
 
@@ -217,10 +217,10 @@ La regresión de «Quiero hacer un viaje barato por Europa» usa respuestas simu
 La respuesta final se presenta en este orden:
 
 1. Datos del viaje: origen, días, viajeros, presupuesto total e intereses reconocidos en la conversación. Los intereses son opcionales; se muestra «No indicados» si faltan.
-2. Tabla de una a tres opciones propuestas por el LLM y validadas por Python, ordenadas por coste total ascendente.
+2. Tabla de una a tres opciones consultadas por el LLM y validadas por Python, ordenadas por coste total ascendente.
 3. Explicaciones breves que relacionan las etiquetas del catálogo con los intereses del usuario. Si no hay coincidencia, se indica; no se inventa afinidad.
 
-La tabla incluye destino, país, coste total del grupo, coste por persona, margen disponible y características del catálogo. El margen se calcula como presupuesto total menos coste total, nunca lo genera el LLM. El resumen del viaje usa los parámetros de las estimaciones verificadas y el presupuesto de la conversación. No se añaden destinos para completar filas ni se ordena o evalúa automáticamente todo el catálogo: el LLM sigue eligiendo las consultas y las opciones.
+La tabla incluye destino, país, coste total del grupo, coste por persona, margen disponible y características del catálogo. El margen se calcula como presupuesto total menos coste total, nunca lo genera el LLM. El resumen del viaje usa los parámetros de las estimaciones verificadas y el presupuesto de la conversación. No se añaden destinos sin estimación para completar filas ni se evalúan automáticamente los precios de todo el catálogo: el LLM sigue eligiendo las consultas. En peticiones múltiples, Python reúne hasta la cantidad solicitada entre los destinos que el modelo ya ha evaluado para ese viaje, respetando preferencias y presupuesto.
 
 Las explicaciones se construyen en Python con etiquetas del catálogo; no añaden actividades, clima, precios ni ventajas redactados libremente por el modelo. Si no hay intereses, se muestran características sin atribuir preferencias al usuario. La presentación está separada en src/presentacion.py; las comprobaciones de origen, duración, viajeros, presupuesto y estimaciones continúan en src/agent.py.
 
@@ -234,7 +234,7 @@ Ejemplo con datos ficticios: Madrid, 4 días, 2 viajeros, 1400 EUR en total e in
 | Roma    | Italia   | 1180 EUR    | 590 EUR     | 220 EUR           | cultura, gastronomía |
 ~~~
 
-Después se explica, por ejemplo: «Oporto: Coincide con tus intereses en cultura. Su coste comprobado está dentro del presupuesto». El orden solo compara las opciones mostradas, sin afirmar que sean las más baratas del catálogo. Si el modelo comprueba y propone una sola, solo se muestra esa fila.
+Después se explica, por ejemplo: «Oporto: Coincide con tus intereses en cultura. Su coste comprobado está dentro del presupuesto». El orden solo compara las opciones mostradas, sin afirmar que sean las más baratas del catálogo. Si se solicita una sola, solo se necesita una opción válida. Si se solicitan varias, el agente intenta completar la comparación antes de terminar.
 
 Las consultas de tipo coste también utilizan la tabla, pero no se presentan como recomendaciones: sin presupuesto conocido, el margen es «No disponible»; si el coste supera un presupuesto conocido, el margen es negativo y no se afirma compatibilidad.
 
@@ -251,3 +251,21 @@ python3 -m src.main
 ~~~
 
 Petición sugerida: «Somos dos personas, queremos viajar cuatro días desde Madrid, con 1400 EUR en total para transporte, alojamiento y gastos diarios. Nos gusta la cultura. Propón hasta tres destinos que hayas comprobado». El número y los destinos dependen de las decisiones del modelo y de los límites del bucle; no se garantiza que consulte tres.
+
+## Cuando se solicitan varias recomendaciones
+
+El agente reconoce peticiones como «hasta tres destinos», «dos alternativas» o «varias recomendaciones», con un máximo de tres. Los números de viajeros o días no se interpretan como cantidad de destinos. Una petición posterior de un solo destino o una consulta de precio conserva ese alcance.
+
+Si el modelo intenta cerrar con una opción y el usuario ha solicitado varias, se revisan los costes verificados para el mismo origen, duración y viajeros. Se reúnen opciones distintas que cumplan el presupuesto y las preferencias explícitas, ordenadas por coste. Si todavía faltan opciones, quedan candidatos compatibles sin estimar y hay consultas disponibles, el programa devuelve al LLM el motivo y los IDs pendientes para que elija qué consultar. No ejecuta por su cuenta una secuencia de herramientas ni obtiene precios directamente del catálogo.
+
+El modelo puede buscar, consultar detalles o estimar otros destinos. No necesita volver a estimar costes ya disponibles para el mismo viaje. Los resultados fallidos, los costes de otro viaje, las opciones fuera de presupuesto o incompatibles con los filtros no sirven para completar la tabla. Repetir una estimación no crea una opción distinta.
+
+Se conservan los límites de doce consultas al modelo y diez intentos de herramienta por turno. Si se agotan, se muestra la tabla de opciones válidas disponibles, aunque sean una o dos, y se aclara que quedan candidatos sin comprobar. No se afirma que sean las únicas opciones válidas del catálogo. Si se ha comprobado el coste de todos los candidatos compatibles y realmente hay menos opciones válidas que las solicitadas, se indica ese resultado. En ningún caso se inventan filas o precios.
+
+Esta ampliación se ha verificado con 14 pruebas automáticas adicionales y respuestas simuladas de Ollama; no requiere el servidor ni supone una nueva evaluación exhaustiva del modelo real. Para probarla en la terminal, inicia Ollama y ejecuta:
+
+~~~bash
+python3 -m src.main
+~~~
+
+Ejemplo: «Somos dos personas, queremos cuatro días desde Madrid, tenemos 1400 EUR en total para transporte, alojamiento y gastos diarios. Nos gusta la cultura. Recomiéndame hasta tres destinos distintos». El resumen, la tabla y las explicaciones mantienen el formato anterior; los avisos de continuación permiten observar los intentos de completar las opciones dentro de los límites.

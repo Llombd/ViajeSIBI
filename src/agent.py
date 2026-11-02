@@ -248,14 +248,37 @@ class AgenteViajes:
         inicio = len(self.historial)
         self.historial.append({"role": "user", "content": texto})
         ejecuciones = 0
+        objetivo = self._cantidad_solicitada()
+        parcial = None
         try:
-            for _ in range(self.max_consultas):
+            for consulta in range(self.max_consultas):
                 mensaje = copy.deepcopy(self.cliente.chat(self.historial))
                 self.historial.append(mensaje)
                 llamadas = mensaje.get("tool_calls", [])
                 if not llamadas:
                     if mensaje.get("content", "").strip() or mensaje.get("propuesta"):
                         respuesta, error = self._validar_respuesta(mensaje)
+                        if not error and objetivo > 1 and mensaje.get("propuesta", {}).get("tipo") == "recomendacion":
+                            ampliada = self._completar_multiple(mensaje["propuesta"], objetivo)
+                            if not ampliada["destinos"]:
+                                error = "No hay costes verificados compatibles con las preferencias; consulta otras opciones."
+                            else:
+                                respuesta, error = self._redactar_propuesta(ampliada)
+                                if not error:
+                                    parcial = ampliada
+                                    pendientes = self._pendientes_multiple(ampliada)
+                                    if (len(ampliada["destinos"]) < objetivo and pendientes
+                                            and consulta + 1 < self.max_consultas
+                                            and ejecuciones < self.max_herramientas):
+                                        error = (
+                                            f"El usuario pidió {objetivo} opciones y solo hay "
+                                            f"{len(ampliada['destinos'])} con coste verificado. Intenta completar la comparación. "
+                                            f"IDs compatibles aún sin coste comprobado: {', '.join(pendientes)}. "
+                                            "Elige qué consultar con estimar_coste; no repitas los costes ya disponibles."
+                                        )
+                                    else:
+                                        mensaje["propuesta"] = ampliada
+                                        respuesta += self._nota_cantidad(ampliada, objetivo)
                         if error:
                             # No conservar una recomendación inventada como si fuera válida.
                             self.historial.pop()
@@ -297,12 +320,32 @@ class AgenteViajes:
                         "role": "tool", "tool_name": nombre,
                         "content": json.dumps(resultado, ensure_ascii=False),
                     })
+                    if objetivo > 1 and nombre == "estimar_coste" and "error" not in resultado:
+                        # Solo reúne costes solicitados por el LLM. No ejecuta nuevas
+                        # consultas ni calcula precios directamente desde el catálogo.
+                        contexto = {
+                            "tipo": "recomendacion", "destinos": [],
+                            "origen": resultado["origen"], "duracion_dias": resultado["duracion_dias"],
+                            "viajeros": resultado["viajeros"], "presupuesto_total": self._presupuesto_usuario(),
+                        }
+                        if contexto["presupuesto_total"] is not None:
+                            ampliada = self._completar_multiple(contexto, objetivo)
+                            if ampliada["destinos"]:
+                                _, error = self._redactar_propuesta(ampliada)
+                                if not error:
+                                    parcial = ampliada
+
                 if limite:
                     break
         except ErrorOllama:
             # Evita dejar llamadas pendientes y conserva los turnos anteriores.
             del self.historial[inicio:]
             raise
+        if parcial is not None:
+            parcial = self._completar_multiple(parcial, objetivo)
+            respuesta, error = self._redactar_propuesta(parcial)
+            if not error:
+                return self._terminar(respuesta + self._nota_cantidad(parcial, objetivo))
         return self._terminar(
             "He alcanzado el límite de consultas de este turno. "
             "No puedo completar la recomendación con certeza. Puedes concretar tu petición."
@@ -311,6 +354,75 @@ class AgenteViajes:
     def _terminar(self, texto):
         self.historial.append({"role": "assistant", "content": texto})
         return texto
+
+    def _cantidad_solicitada(self):
+        """Reconoce cantidades junto a opciones, nunca el número de viajeros/días."""
+        cantidad = 1
+        numeros = {"un": 1, "uno": 1, "una": 1, "dos": 2, "tres": 3}
+        patron = (r"\b(?:hasta\s+)?(un|uno|una|dos|tres|[1-9]\d*)\s+"
+                  r"(?:destinos?|opciones?|recomendaciones?|alternativas?)\b|"
+                  r"\b(?:varios|varias|diferentes|distintos|distintas|mas)\s+"
+                  r"(?:destinos|opciones|recomendaciones|alternativas)\b")
+        for mensaje in self.historial:
+            if mensaje["role"] != "user" or mensaje.get("interno"):
+                continue
+            texto = _normalizar(mensaje["content"])
+            coincidencias = list(re.finditer(patron, texto))
+            if coincidencias:
+                valor = coincidencias[-1].group(1)
+                cantidad = min(3, int(valor) if valor and valor.isdigit() else numeros.get(valor, 3))
+            elif re.search(r"\b(?:cuanto|coste|precio)\b", texto):
+                # Una pregunta posterior de precio no obliga a buscar alternativas.
+                cantidad = 1
+        return cantidad
+
+    def _candidatos_multiple(self):
+        """Solo valida compatibilidad con los filtros reales; no consulta precios."""
+        regiones = self._regiones_usuario()
+        intereses = self._intereses_usuario()
+        return {
+            d["id"] for d in _cargar_catalogo()["destinos"]
+            if (not regiones or d["region"] in regiones)
+            and intereses.issubset(d["intereses"])
+        }
+
+    def _costes_multiple(self, propuesta):
+        costes = {}
+        for mensaje in self.historial:
+            if mensaje["role"] != "tool" or mensaje.get("tool_name") != "estimar_coste":
+                continue
+            dato = json.loads(mensaje["content"])
+            if ("error" not in dato
+                    and _normalizar(dato["origen"]) == _normalizar(propuesta["origen"])
+                    and dato["duracion_dias"] == propuesta["duracion_dias"]
+                    and dato["viajeros"] == propuesta["viajeros"]):
+                costes[dato["destino_id"]] = dato
+        return costes
+
+    def _completar_multiple(self, propuesta, objetivo):
+        """Incluye hasta el objetivo entre los destinos que el LLM ha evaluado."""
+        candidatos = self._candidatos_multiple()
+        costes = self._costes_multiple(propuesta)
+        validos = [dato for destino, dato in costes.items()
+                   if destino in candidatos and dato["total_grupo"] <= propuesta["presupuesto_total"]]
+        validos.sort(key=lambda dato: dato["total_grupo"])
+        return {**propuesta, "destinos": [d["destino_id"] for d in validos[:objetivo]]}
+
+    def _pendientes_multiple(self, propuesta):
+        return sorted(self._candidatos_multiple() - self._costes_multiple(propuesta).keys())
+
+    def _nota_cantidad(self, propuesta, objetivo):
+        encontrados = len(propuesta["destinos"])
+        if encontrados >= objetivo:
+            return ""
+        if self._pendientes_multiple(propuesta):
+            verbo = "Se muestra" if encontrados == 1 else "Se muestran"
+            return (f"\n\n{verbo} {encontrados} de las {objetivo} opciones solicitadas: "
+                    "se alcanzó el límite de búsqueda. Quedan candidatos sin comprobar; "
+                    "no significa que no existan otras opciones válidas.")
+        disponibles = "1 opción válida" if encontrados == 1 else f"{encontrados} opciones válidas"
+        return (f"\n\nSolo hay {disponibles} de las {objetivo} solicitadas "
+                "tras comprobar el coste de todos los destinos compatibles con tus filtros.")
 
     def _regiones_usuario(self):
         """Solo reconoce regiones expresadas explícitamente, nunca las deduce de Madrid."""

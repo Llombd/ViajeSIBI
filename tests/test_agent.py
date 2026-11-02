@@ -459,5 +459,175 @@ class TestAgente(unittest.TestCase):
                 ClienteOllama().chat([])
 
 
+class TestVariasRecomendaciones(unittest.TestCase):
+    peticion = ("Somos 2 personas, 4 días desde Madrid, 1400 EUR en total. "
+                "Nos gusta la cultura. Recomienda hasta tres destinos.")
+
+    def filas(self, texto):
+        filas = [linea for linea in texto.splitlines() if linea.startswith("| ")]
+        return [[celda.strip() for celda in fila.split("|")[1:-1]] for fila in filas[1:]]
+
+    def test_no_cierra_con_una_si_quedan_alternativas(self):
+        cliente = ClienteSimulado([
+            coste("oporto"), propuesta(["oporto"], "recomendacion", 1400),
+            coste("roma"), coste("lisboa"), propuesta(["roma"], "recomendacion", 1400),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        texto = agente.responder(self.peticion)
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto", "Lisboa", "Roma"])
+        self.assertEqual([f[2] for f in self.filas(texto)], ["770 EUR", "910 EUR", "1180 EUR"])
+        self.assertIn("solo hay 1 con coste verificado", cliente.peticiones[2][-1]["content"])
+        llamadas = [c["function"]["arguments"]["destino_id"]
+                    for m in agente.historial for c in m.get("tool_calls", [])]
+        self.assertEqual(llamadas, ["oporto", "roma", "lisboa"])
+        self.assertIn("Datos del viaje", texto)
+        self.assertIn("Por qué se proponen", texto)
+
+    def test_reutiliza_costes_de_la_sesion_sin_repetirlos(self):
+        cliente = ClienteSimulado([
+            coste("oporto"), propuesta(["oporto"], "recomendacion", 1400),
+            propuesta(["oporto"], "recomendacion", 1400),
+            coste("praga"), coste("budapest"), propuesta(["praga"], "recomendacion", 1400),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder(self.peticion.replace("hasta tres destinos", "un destino"))
+        texto = agente.responder("Ahora quiero tres destinos, manteniendo los datos.")
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto", "Budapest", "Praga"])
+        costes = [m for m in agente.historial if m["role"] == "tool" and m["tool_name"] == "estimar_coste"]
+        self.assertEqual(len(costes), 3)
+
+    def test_solo_dos_destinos_compatibles_no_inventa_un_tercero(self):
+        cliente = ClienteSimulado([
+            coste("atenas"), coste("barcelona"), propuesta(["barcelona"], "recomendacion", 2000),
+        ])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None).responder(
+            "Somos 2 personas, 4 días desde Madrid, 2000 EUR. Queremos playa y tres destinos."
+        )
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Barcelona", "Atenas"])
+        self.assertIn("Solo hay 2 opciones válidas", texto)
+        self.assertIn("todos los destinos compatibles", texto)
+        self.assertNotIn("se alcanzó el límite", texto)
+
+    def test_solo_una_valida_tras_comprobar_todos_los_candidatos(self):
+        cliente = ClienteSimulado([
+            coste("paris"), coste("amsterdam"), coste("bruselas"),
+            propuesta(["bruselas"], "recomendacion", 1100),
+        ])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None).responder(
+            "Somos 2 personas, 4 días desde Madrid, 1100 EUR. Queremos cultura en la región oeste y tres opciones."
+        )
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Bruselas"])
+        self.assertEqual(self.filas(texto)[0][2], "1056 EUR")
+        self.assertIn("Solo hay 1 opción válida", texto)
+        self.assertNotIn("se alcanzó el límite", texto)
+
+    def test_descarta_caro_y_no_usa_tres_como_excusa_para_incluirlo(self):
+        cliente = ClienteSimulado([
+            coste("paris"), coste("oporto"), coste("budapest"), coste("praga"),
+            propuesta(["oporto"], "recomendacion", 1400),
+        ])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None).responder(self.peticion)
+        self.assertEqual(len(self.filas(texto)), 3)
+        self.assertNotIn("París", texto)
+        self.assertNotIn("1440 EUR", texto)
+
+    def test_limite_consultas_muestra_las_verificadas_sin_afirmar_exhaustividad(self):
+        cliente = ClienteSimulado([coste("oporto"), coste("lisboa")])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
+        texto = agente.responder(self.peticion)
+        self.assertEqual(len(cliente.peticiones), 2)
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto", "Lisboa"])
+        self.assertIn("se alcanzó el límite", texto)
+        self.assertIn("Quedan candidatos sin comprobar", texto)
+        self.assertNotIn("Solo hay", texto)
+
+    def test_limite_herramientas_no_se_supera_para_completar_tres(self):
+        cliente = ClienteSimulado([coste("oporto"), coste("lisboa")])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_herramientas=1)
+        with patch("src.agent.ejecutar_herramienta", wraps=ejecutar_herramienta) as ejecutar:
+            texto = agente.responder(self.peticion)
+        self.assertEqual(ejecutar.call_count, 1)
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto"])
+        self.assertNotIn("Lisboa", texto)
+        self.assertIn("Quedan candidatos sin comprobar", texto)
+
+    def test_costes_de_otro_viaje_no_completan_la_tabla(self):
+        cliente = ClienteSimulado([coste("oporto")])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=1)
+        from src.tools import estimar_coste
+        for destino, dias, viajeros in [("roma", 3, 2), ("lisboa", 4, 1)]:
+            agente.historial.append({
+                "role": "tool", "tool_name": "estimar_coste",
+                "content": json.dumps(estimar_coste(destino, "Madrid", dias, viajeros)),
+            })
+        texto = agente.responder(self.peticion)
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto"])
+
+    def test_coste_fallido_no_cuenta_como_alternativa(self):
+        cliente = ClienteSimulado([
+            llamada("estimar_coste", {
+                "destino_id": "lisboa", "origen": "Bilbao", "duracion_dias": 4, "viajeros": 2,
+            }),
+            coste("oporto"),
+        ])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2).responder(self.peticion)
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto"])
+        self.assertIn("Quedan candidatos sin comprobar", texto)
+
+    def test_no_rellena_con_destinos_ajenos_a_los_filtros(self):
+        cliente = ClienteSimulado([
+            coste("oporto"), coste("copenhague"), coste("estocolmo"),
+            propuesta(["copenhague"], "recomendacion", 2000),
+        ])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None).responder(
+            "Somos 2 personas, 4 días desde Madrid, 2000 EUR. Queremos cultura y naturaleza "
+            "en el norte de Europa y tres destinos."
+        )
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Estocolmo", "Copenhague"])
+        self.assertNotIn("Oporto", texto)
+
+    def test_dos_solicitadas_no_se_convierten_en_tres(self):
+        cliente = ClienteSimulado([
+            coste("roma"), coste("oporto"), coste("lisboa"),
+            propuesta(["roma"], "recomendacion", 1400),
+        ])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None).responder(
+            self.peticion.replace("hasta tres destinos", "dos alternativas")
+        )
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto", "Lisboa"])
+
+    def test_cantidad_no_confunde_viajeros_y_dias_con_destinos(self):
+        for texto, esperado in [
+            ("Somos 3 personas y viajamos 2 días", 1),
+            ("Quiero un destino", 1), ("Hasta tres recomendaciones", 3),
+            ("Dame varias alternativas", 3), ("Quiero dos destinos", 2),
+            ("Quiero 5 destinos", 3),
+        ]:
+            with self.subTest(texto=texto):
+                agente = AgenteViajes(ClienteSimulado([]), mostrar=lambda texto: None)
+                agente.historial.append({"role": "user", "content": texto})
+                self.assertEqual(agente._cantidad_solicitada(), esperado)
+
+    def test_repetir_un_coste_no_cuenta_como_tres_destinos(self):
+        cliente = ClienteSimulado([coste("oporto"), coste("oporto"), coste("oporto")])
+        texto = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=3).responder(self.peticion)
+        self.assertEqual([f[0] for f in self.filas(texto)], ["Oporto"])
+        self.assertIn("Quedan candidatos sin comprobar", texto)
+
+    def test_una_solicitada_y_consulta_de_precio_conservan_comportamiento(self):
+        cliente = ClienteSimulado([
+            coste("oporto"), propuesta(["oporto"], "recomendacion", 1400),
+            propuesta(["oporto"], "coste"),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        texto = agente.responder(self.peticion.replace("hasta tres destinos", "un destino"))
+        self.assertEqual(len(self.filas(texto)), 1)
+        # Una pregunta de coste posterior a una petición múltiple no fuerza alternativas.
+        agente.historial.append({"role": "user", "content": "Dame tres destinos"})
+        texto = agente.responder("¿Cuánto cuesta Oporto con esos datos?")
+        self.assertIn("Costes consultados", texto)
+        self.assertEqual(len(self.filas(texto)), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
