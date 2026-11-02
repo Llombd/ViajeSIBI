@@ -783,5 +783,74 @@ class TestCierrePorLimite(unittest.TestCase):
         self.assertIn("no se recomiendan", texto)
 
 
+class TestActualizacionPresupuesto(unittest.TestCase):
+    def crear(self, respuestas=()):
+        cliente = ClienteSimulado(respuestas)
+        return AgenteViajes(cliente, mostrar=lambda texto: None), cliente
+
+    def test_sin_moneda_pregunta_sin_consultar_modelo(self):
+        agente, cliente = self.crear()
+        texto = agente.responder("Somos dos personas, cuatro días desde Madrid, cultura y tenemos 1400. Recomienda tres destinos.")
+        self.assertIn("1400 EUR", texto)
+        self.assertIn("presupuesto total", texto)
+        self.assertEqual(cliente.peticiones, [])
+        self.assertIsNone(agente._presupuesto_usuario())
+
+    def test_no_reutiliza_presupuesto_anterior(self):
+        agente, _ = self.crear()
+        agente.historial.append({"role": "user", "content": "Tenemos 500 EUR en total."})
+        agente.responder("Ahora tenemos 1400.")
+        self.assertIsNone(agente._presupuesto_usuario())
+        self.assertIn("presupuesto", agente._faltan_datos_imprescindibles())
+
+    def test_confirmacion_conserva_viaje_y_coste_verificado(self):
+        agente, cliente = self.crear([coste("lisboa"), propuesta(["lisboa"], "recomendacion", 1400)])
+        peticion = "Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y tenemos 1400."
+        agente.responder(peticion)
+        texto = agente.responder("1400 EUR en total. Recomienda un destino.")
+        self.assertIn("910 EUR", texto)
+        self.assertIn("490 EUR", texto)
+        self.assertIn("Intereses: cultura", texto)
+        self.assertEqual(cliente.peticiones[0][1]["content"], peticion)
+
+    def test_si_sin_moneda_no_confirma_importe(self):
+        agente, cliente = self.crear()
+        agente.responder("Tenemos 1400")
+        self.assertIn("Confirma el importe", agente.responder("Sí"))
+        self.assertEqual(cliente.peticiones, [])
+
+    def test_dias_y_viajeros_no_son_presupuestos(self):
+        for texto in ("Tenemos 4 días", "Tenemos 2 viajeros", "Tenemos 3 destinos", "Somos 2 personas, 4 días"):
+            with self.subTest(texto=texto):
+                self.assertEqual(AgenteViajes._menciones_presupuesto(texto), [])
+
+    def test_formatos_y_actualizacion_explicita(self):
+        for importe in ("1400 €", "1.400 EUR", "1.400,00 euros"):
+            with self.subTest(importe=importe):
+                agente, _ = self.crear()
+                agente.historial.extend([
+                    {"role": "user", "content": "500 EUR"},
+                    {"role": "user", "content": "Ahora tenemos " + importe + " en total."},
+                ])
+                self.assertEqual(agente._presupuesto_usuario(), 1400)
+
+    def test_menciones_internas_no_confirman_presupuesto(self):
+        agente, _ = self.crear()
+        agente.responder("Presupuesto máximo: 1400")
+        agente.historial.append({"role": "user", "interno": True, "content": "1400 EUR"})
+        self.assertIsNone(agente._presupuesto_usuario())
+
+    def test_tres_recomendaciones_tras_confirmar(self):
+        agente, _ = self.crear([
+            coste("lisboa"), coste("oporto"), coste("barcelona"),
+            propuesta(["lisboa", "oporto", "barcelona"], "recomendacion", 1400),
+        ])
+        agente.responder("Somos dos personas, cuatro días desde Madrid, cultura y tenemos 1400. Recomienda hasta tres destinos.")
+        texto = agente.responder("1400 € en total")
+        self.assertLess(texto.index("| Oporto"), texto.index("| Lisboa"))
+        self.assertLess(texto.index("| Lisboa"), texto.index("| Barcelona"))
+        self.assertIn("630 EUR", texto)
+
+
 if __name__ == "__main__":
     unittest.main()

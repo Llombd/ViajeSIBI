@@ -247,6 +247,15 @@ class AgenteViajes:
             raise ValueError("Escribe una petición no vacía.")
         inicio = len(self.historial)
         self.historial.append({"role": "user", "content": texto})
+        menciones = [mencion for mensaje in self.historial
+                     if mensaje["role"] == "user" and not mensaje.get("interno")
+                     for mencion in self._menciones_presupuesto(mensaje["content"])]
+        if menciones and not menciones[-1][1]:
+            # La aclaración es del programa: no es un precio ni una decisión del LLM.
+            return self._terminar(
+                f"¿Te refieres a {menciones[-1][0]} EUR de presupuesto total para todos los viajeros? "
+                "Confirma el importe y la moneda, por ejemplo: «1400 EUR en total»."
+            )
         ejecuciones = 0
         objetivo = self._cantidad_solicitada()
         parcial = None
@@ -569,7 +578,7 @@ class AgenteViajes:
             "duración": re.search(numeros + r"\s+dias?\b", texto),
             "viajeros": re.search(r"\bsomos\s+" + numeros + r"\b|" + numeros
                                   + r"\s+(?:personas?|viajeros?)\b|con otra persona", texto),
-            "presupuesto": re.search(r"\d[\d.,]*\s*(?:€|euros?\b|eur\b)", texto),
+            "presupuesto": self._presupuesto_usuario() is not None,
         }
         return [nombre for nombre, presente in mencionados.items() if not presente]
 
@@ -696,13 +705,38 @@ class AgenteViajes:
             opciones, presupuesto, self._intereses_usuario(), propuesta["tipo"]
         ), None
 
+    @staticmethod
+    def _menciones_presupuesto(texto):
+        """Detecta importes explícitos o un posible presupuesto sin moneda.
+
+        No interpreta números sueltos ni cantidades de días o viajeros.
+        Un importe sin moneda se conserva como pendiente, nunca como confirmado.
+        """
+        numero = r"\d+(?:[.,]\d+)*"
+        patron = (
+            rf"(?P<explicito>{numero})\s*(?:EUR\b|euros?\b|€)"
+            rf"|(?:\btenemos|\bdispongo\s+de|\bdisponemos\s+de|"
+            rf"\bpresupuesto(?:\s+total|\s+maximo)?(?:\s+es)?(?:\s+de)?)"
+            rf"\s*[:=]?\s*(?P<pendiente>{numero})(?!\d|[.,]\d)"
+            rf"(?!\s*(?:personas?|viajeros?|dias?|noches?|destinos?|opciones?)\b)"
+        )
+        menciones = []
+        for coincidencia in re.finditer(patron, _normalizar(texto), re.I):
+            valor = coincidencia.group("explicito") or coincidencia.group("pendiente")
+            # El segundo caso puede consumir también una cantidad con moneda.
+            resto = _normalizar(texto)[coincidencia.end():]
+            confirmado = bool(coincidencia.group("explicito") or
+                              re.match(r"\s*(?:eur\b|euros?\b|€)", resto))
+            menciones.append((valor, confirmado))
+        return menciones
+
     def _presupuesto_usuario(self):
-        """Reutiliza la comprobación existente, separada de los precios calculados."""
-        importes = []
+        """La última mención sustituye a la anterior, incluso si falta confirmar."""
+        ultimo = None
         for mensaje in self.historial:
             if mensaje["role"] == "user" and not mensaje.get("interno"):
-                for valor in re.findall(r"(\d+(?:[.,]\d+)*)\s*(?:EUR\b|euros?\b|€)", mensaje["content"], re.I):
+                for valor, confirmado in self._menciones_presupuesto(mensaje["content"]):
                     valor = valor.replace(".", "") if re.fullmatch(r"\d{1,3}(?:\.\d{3})+", valor) else valor
                     valor = valor.replace(".", "").replace(",", ".") if "," in valor else valor
-                    importes.append(float(valor))
-        return importes[-1] if importes else None
+                    ultimo = float(valor) if confirmado else None
+        return ultimo
