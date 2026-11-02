@@ -307,7 +307,9 @@ class AgenteViajes:
                     else:
                         ejecuciones += 1
                         self.mostrar(f"[Herramienta] {nombre}({json.dumps(argumentos, ensure_ascii=False)})")
-                        resultado = ejecutar_herramienta(nombre, argumentos)
+                        resultado = self._coste_descartado(argumentos) if nombre == "estimar_coste" else None
+                        if resultado is None:
+                            resultado = ejecutar_herramienta(nombre, argumentos)
                         if nombre == "buscar_destinos" and resultado.get("destinos") == []:
                             resultado["aviso"] = (
                                 "Sin coincidencias para estos filtros, no significa que no haya destinos. "
@@ -320,7 +322,7 @@ class AgenteViajes:
                         "role": "tool", "tool_name": nombre,
                         "content": json.dumps(resultado, ensure_ascii=False),
                     })
-                    if objetivo > 1 and nombre == "estimar_coste" and "error" not in resultado:
+                    if nombre == "estimar_coste" and "error" not in resultado:
                         # Solo reúne costes solicitados por el LLM. No ejecuta nuevas
                         # consultas ni calcula precios directamente desde el catálogo.
                         contexto = {
@@ -328,12 +330,20 @@ class AgenteViajes:
                             "origen": resultado["origen"], "duracion_dias": resultado["duracion_dias"],
                             "viajeros": resultado["viajeros"], "presupuesto_total": self._presupuesto_usuario(),
                         }
-                        if contexto["presupuesto_total"] is not None:
-                            ampliada = self._completar_multiple(contexto, objetivo)
-                            if ampliada["destinos"]:
-                                _, error = self._redactar_propuesta(ampliada)
-                                if not error:
-                                    parcial = ampliada
+                        presupuesto = contexto["presupuesto_total"]
+                        if presupuesto is not None and math.isfinite(presupuesto) and presupuesto > 0:
+                            # Conservar el viaje aunque todos los costes excedan el presupuesto.
+                            parcial = contexto
+                            if resultado["total_grupo"] > presupuesto:
+                                self.historial.append({
+                                    "role": "user", "interno": True,
+                                    "content": (
+                                        f"Descartado por presupuesto para este viaje: {resultado['destino_id']} "
+                                        f"({resultado['total_grupo']:g} EUR frente a {presupuesto:g} EUR). "
+                                        "No vuelvas a proponerlo ni a estimarlo con los mismos datos. "
+                                        "Elige otro candidato sin coste verificado o pide una aclaración."
+                                    ),
+                                })
 
                 if limite:
                     break
@@ -342,10 +352,9 @@ class AgenteViajes:
             del self.historial[inicio:]
             raise
         if parcial is not None:
-            parcial = self._completar_multiple(parcial, objetivo)
-            respuesta, error = self._redactar_propuesta(parcial)
-            if not error:
-                return self._terminar(respuesta + self._nota_cantidad(parcial, objetivo))
+            respuesta = self._respuesta_al_limite(parcial, objetivo)
+            if respuesta is not None:
+                return self._terminar(respuesta)
         return self._terminar(
             "He alcanzado el límite de consultas de este turno. "
             "No puedo completar la recomendación con certeza. Puedes concretar tu petición."
@@ -354,6 +363,59 @@ class AgenteViajes:
     def _terminar(self, texto):
         self.historial.append({"role": "assistant", "content": texto})
         return texto
+
+    def _coste_descartado(self, argumentos):
+        """Reutiliza solo un coste descartado del mismo viaje y presupuesto actual.
+
+        El intento sigue contando para el límite. Un cambio de presupuesto u
+        otros parámetros permite volver a considerar el destino.
+        """
+        campos = {"destino_id", "origen", "duracion_dias", "viajeros"}
+        if not isinstance(argumentos, dict) or set(argumentos) != campos:
+            return None
+        if (not isinstance(argumentos["destino_id"], str)
+                or not isinstance(argumentos["origen"], str)
+                or type(argumentos["duracion_dias"]) is not int or argumentos["duracion_dias"] < 1
+                or type(argumentos["viajeros"]) is not int or argumentos["viajeros"] < 1):
+            return None
+        presupuesto = self._presupuesto_usuario()
+        if presupuesto is None:
+            return None
+        dato = self._costes_multiple(argumentos).get(_normalizar(argumentos["destino_id"]))
+        if dato is not None and dato["total_grupo"] > presupuesto:
+            return {**dato, "aviso": "Coste ya comprobado y descartado para este presupuesto; no se ha recalculado."}
+        return None
+
+    def _respuesta_al_limite(self, contexto, objetivo):
+        """Cierre determinista: ninguna frase ni importe procede de prosa del LLM."""
+        propuesta = self._completar_multiple(contexto, objetivo)
+        if propuesta["destinos"]:
+            respuesta, error = self._redactar_propuesta(propuesta)
+            return respuesta + self._nota_cantidad(propuesta, objetivo) if not error else None
+
+        # Si no hay opciones viables, mostrar únicamente costes exitosos del
+        # mismo viaje y candidatos que respetan los filtros reales del usuario.
+        catalogo = {d["id"]: d for d in _cargar_catalogo()["destinos"]}
+        candidatos = self._candidatos_multiple()
+        costes = self._costes_multiple(contexto)
+        comprobados = [(catalogo[i], dato) for i, dato in costes.items() if i in candidatos]
+        if not comprobados:
+            return None
+        respuesta = presentar_opciones(
+            comprobados, contexto["presupuesto_total"], self._intereses_usuario(), "descartados"
+        )
+        pendientes = self._pendientes_multiple(contexto)
+        if pendientes:
+            sin_verificar = ("Queda 1 candidato compatible sin verificar. " if len(pendientes) == 1
+                             else f"Quedan {len(pendientes)} candidatos compatibles sin verificar. ")
+            alcance = (sin_verificar
+                       + "Esto no demuestra que no existan destinos válidos en todo el catálogo.")
+        else:
+            alcance = ("Se ha comprobado el coste de todos los candidatos compatibles con tus preferencias; "
+                       "ninguno cumple el presupuesto indicado.")
+        return (respuesta + "\n\nHe alcanzado el límite de consultas de este turno. "
+                "Los destinos comprobados superan el presupuesto; no se recomiendan. "
+                + alcance + " Puedes pedir continuar la búsqueda o revisar el presupuesto, sin cambiarlo automáticamente.")
 
     def _cantidad_solicitada(self):
         """Reconoce cantidades junto a opciones, nunca el número de viajeros/días."""
@@ -625,7 +687,9 @@ class AgenteViajes:
                 )
             dato = estimaciones[clave]
             if propuesta["tipo"] == "recomendacion" and dato["total_grupo"] > presupuesto:
-                return None, f"{destino_id} supera el presupuesto; consulta otra opción o explica la limitación."
+                return None, (f"{destino_id} supera el presupuesto y está descartado para este viaje. "
+                              "No vuelvas a proponerlo con los mismos datos; consulta otra opción "
+                              "o explica la limitación.")
             opciones.append((catalogo[destino_id], dato))
 
         return presentar_opciones(

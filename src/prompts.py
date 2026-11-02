@@ -53,6 +53,9 @@ Si el usuario pide dos, tres o varias alternativas, intenta obtener esa cantidad
 (máximo tres). No cierres con una sola mientras queden candidatos compatibles
 por consultar y margen en los límites. Cada destino debe tener su estimación.
 Si una opción supera el presupuesto, consulta otras sin inventar filtros.
+Los destinos descartados por coste no deben volver a proponerse con el mismo
+origen, duración, viajeros y presupuesto. Reutiliza su resultado y busca otro.
+Si cambian esos datos, comprueba de nuevo si el descarte sigue siendo aplicable.
 Los costes ya consultados para el mismo viaje se reutilizan: no los repitas.
 Si todos los candidatos compatibles se han evaluado y hay menos opciones
 válidas, ofrece solo esas. Si faltan consultas por el límite, aclara que no se

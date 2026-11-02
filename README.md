@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal con Ollama local y qwen3:4b. Pasan 72 pruebas, incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal con Ollama local y qwen3:4b. Pasan 85 pruebas, incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -139,7 +139,7 @@ data/
   destinos.json        Los 15 destinos y todos los datos ficticios
 tests/
   test_tools.py        Las 11 pruebas originales de herramientas
-  test_agent.py        47 pruebas del bucle, cliente y regresiones con respuestas simuladas
+  test_agent.py        60 pruebas del bucle, cliente y regresiones con respuestas simuladas
   test_presentacion.py 14 pruebas del formato, márgenes y datos mostrados
 evals/
   casos.json           Cinco escenarios; sin evaluador automático del LLM
@@ -157,7 +157,7 @@ cd /Users/lucia/Documents/viajeSIBI
 python3 -m unittest discover -s tests -v
 ~~~
 
-Hay 72 pruebas. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
+Hay 85 pruebas. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
 
 Ejemplo de uso en Python, desde la carpeta del proyecto:
 
@@ -269,3 +269,24 @@ python3 -m src.main
 ~~~
 
 Ejemplo: «Somos dos personas, queremos cuatro días desde Madrid, tenemos 1400 EUR en total para transporte, alojamiento y gastos diarios. Nos gusta la cultura. Recomiéndame hasta tres destinos distintos». El resumen, la tabla y las explicaciones mantienen el formato anterior; los avisos de continuación permiten observar los intentos de completar las opciones dentro de los límites.
+
+## Respuesta útil al alcanzar los límites
+
+El cierre no depende de que Qwen3 redacte correctamente la respuesta final. Después de cada estimación exitosa se conserva el contexto comprobado del viaje, incluso si su coste supera el presupuesto y aunque se haya solicitado una sola recomendación.
+
+Cuando se agotan las consultas al modelo o los intentos de herramienta:
+
+- Si hay destinos válidos, Python conserva el resumen, la tabla ordenada y las explicaciones. Muestra solo las opciones verificadas y distingue una búsqueda incompleta de una revisión de todos los candidatos compatibles.
+- Si ninguno de los destinos comprobados cumple, se muestra una tabla separada de «Destinos comprobados fuera de presupuesto (no recomendados)», con costes, márgenes negativos y cuánto excede cada uno el presupuesto. No se presentan como recomendaciones.
+- Se indica cuántos candidatos compatibles siguen sin coste verificado. Solo si todos tienen una estimación exitosa para el mismo origen, duración y viajeros se permite concluir que ninguno de esos candidatos cumple el presupuesto. Los errores y costes de otros viajes no justifican esa conclusión.
+- Si no hay resultados exitosos relevantes o falta presupuesto comprobable, no se inventa una tabla ni una conclusión sobre precios.
+
+Un destino descartado se señala al modelo para que elija otra consulta. Si vuelve a solicitar el mismo coste y sigue fuera del presupuesto actual, se reutiliza el resultado verificado, sin recalcularlo. El intento sigue contando para el límite. Un cambio de presupuesto o de parámetros permite reconsiderar el destino. No se modifican automáticamente las preferencias ni el presupuesto.
+
+Ejemplo de cierre comprobado con herramientas reales y decisiones simuladas: dos viajeros, cuatro días desde Madrid, cultura y 500 EUR en total. Tras consultar Lisboa (910 EUR), Oporto (770 EUR) y Barcelona (990 EUR), la salida muestra esos costes como descartados y explica que quedan 12 candidatos compatibles sin verificar. No afirma que no existan destinos válidos en todo el catálogo.
+
+Esta mejora incluye 13 pruebas automáticas adicionales. Se ejecutan junto con las anteriores sin conectar Ollama:
+
+~~~bash
+python3 -B -m unittest discover -s tests
+~~~

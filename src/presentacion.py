@@ -36,7 +36,9 @@ def presentar_opciones(opciones, presupuesto, intereses, tipo):
         "Presupuesto total: " + (_dinero(presupuesto) if presupuesto is not None else "No indicado"),
         "Intereses: " + (_etiquetas(intereses) if intereses else "No indicados"),
         "",
-        "Destinos recomendados con coste comprobado:" if tipo == "recomendacion" else "Costes consultados:",
+        ("Destinos recomendados con coste comprobado:" if tipo == "recomendacion"
+         else "Destinos comprobados fuera de presupuesto (no recomendados):" if tipo == "descartados"
+         else "Costes consultados:"),
     ]
     filas = []
     for destino, coste in ordenadas:
@@ -66,6 +68,8 @@ def presentar_opciones(opciones, presupuesto, intereses, tipo):
                       "No indicaste intereses específicos.")
         if tipo == "recomendacion":
             motivo += " Su coste comprobado está dentro del presupuesto."
+        elif tipo == "descartados":
+            motivo += f" Supera el presupuesto en {_dinero(round(coste['total_grupo'] - presupuesto, 2))}."
         lineas.append(f"- {destino['nombre']}: {motivo}")
     lineas.extend([
         "",
