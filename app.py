@@ -5,19 +5,6 @@ import streamlit as st
 from src.agent import AgenteViajes, ErrorOllama
 
 
-EJEMPLOS = (
-    ("Escapada cultural", "Compara hasta tres destinos",
-     "Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y tenemos "
-     "1400 EUR en total. Recomienda hasta tres destinos."),
-    ("Coste de Oporto", "Calcula el precio de un destino",
-     "Calcula el coste de Oporto para dos personas, cuatro días desde Madrid. "
-     "Tenemos 800 EUR en total."),
-    ("Viaje en grupo", "Explora opciones para cuatro personas",
-     "Somos cuatro personas, viajamos una semana desde Madrid y tenemos "
-     "3000 EUR en total. Nos interesa la cultura. ¿Dónde podemos ir?"),
-)
-
-
 def mostrar_cabecera():
     st.markdown(
         """
@@ -49,23 +36,11 @@ def mostrar_cabecera():
         <section class="viaje-cabecera" aria-labelledby="viaje-titulo">
             <p class="viaje-etiqueta">Tu asistente de viajes</p>
             <h1 id="viaje-titulo">¿Dónde será tu próximo viaje?</h1>
-            <p>Cuéntame cómo quieres viajar y compara destinos con costes del catálogo.</p>
+            <p>Escribe tu consulta abajo. Puedes comparar destinos, consultar un coste o seguir afinando tu viaje en el chat.</p>
         </section>
         """,
         unsafe_allow_html=True,
     )
-
-
-def mostrar_ejemplos():
-    st.subheader("Empieza con una idea")
-    seleccionado = None
-    for columna, (titulo, descripcion, peticion) in zip(st.columns(3), EJEMPLOS):
-        with columna, st.container(border=True):
-            st.markdown(f"**{titulo}**")
-            st.caption(descripcion)
-            if st.button(f"Probar · {titulo}", use_container_width=True):
-                seleccionado = peticion
-    return seleccionado
 
 
 def mostrar_mensaje(mensaje):
@@ -110,12 +85,11 @@ def main():
 
     mostrar_cabecera()
     st.caption("Demostración universitaria · 15 destinos · Datos ficticios del catálogo")
-    ejemplo = mostrar_ejemplos() if not st.session_state.mensajes else None
 
     for mensaje in st.session_state.mensajes:
         mostrar_mensaje(mensaje)
 
-    texto = st.chat_input("Cuéntame tu viaje…") or ejemplo
+    texto = st.chat_input("Escribe aquí qué viaje tienes en mente…")
     if texto and texto.strip():
         usuario = {"role": "user", "content": texto}
         st.session_state.mensajes.append(usuario)

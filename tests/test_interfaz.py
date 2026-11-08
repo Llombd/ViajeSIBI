@@ -27,18 +27,6 @@ class TestInterfaz(unittest.TestCase):
         self.assertEqual(cliente.peticiones, [])
         self.assertEqual(len(app.chat_input), 1)
 
-    def test_ejemplo_inicia_la_conversacion_una_vez(self):
-        app, cliente = self.abrir([
-            {"role": "assistant", "content": "¿Quieres consultar otro destino?"},
-        ])
-        boton = next(boton for boton in app.button if boton.label == "Probar · Coste de Oporto")
-        boton.click().run()
-        self.assertFalse(app.exception)
-        self.assertEqual(len(cliente.peticiones), 1)
-        self.assertIn("Oporto", cliente.peticiones[0][1]["content"])
-        self.assertEqual(len(app.chat_message), 2)
-        self.assertFalse(any(boton.label.startswith("Probar") for boton in app.button))
-
     def test_historial_persiste_entre_mensajes(self):
         app, cliente = self.abrir([
             {"role": "assistant", "content": "¿Cuántos días?"},
