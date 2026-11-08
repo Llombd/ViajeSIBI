@@ -77,6 +77,15 @@ class TestInterfaz(unittest.TestCase):
         self.assertEqual(app.session_state["agente"]._origen_usuario(), "Madrid")
         self.assertIn("faltan: duración", app.markdown[-1].value)
 
+    def test_ciudad_sola_responde_al_origen_pendiente(self):
+        app, cliente = self.abrir([{"role": "assistant", "content": "¿Cuál es el origen del viaje?"}])
+        app.chat_input[0].set_value("viaje 4 personas 1000€ en febrero una semana").run()
+        app.chat_input[0].set_value("leon").run()
+        self.assertFalse(app.exception)
+        self.assertIn("solo permite estimar el transporte desde Madrid", app.markdown[-1].value)
+        self.assertEqual(app.session_state["agente"]._faltan_datos_imprescindibles(), [])
+        self.assertEqual(len(cliente.peticiones), 1)
+
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])
         app.chat_input[0].set_value("Somos 2 personas, 4 días desde Madrid, cultura y 800 EUR en total. Recomienda un destino.").run()

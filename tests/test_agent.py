@@ -1008,5 +1008,44 @@ class TestConfirmarOrigen(unittest.TestCase):
         self.assertIn("desde Madrid", mensaje["content"])
 
 
+class TestRespuestaCortaOrigen(unittest.TestCase):
+    def test_leon_responde_a_la_pregunta_de_origen(self):
+        cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuál es el origen del viaje?"}])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("viaje 4 personas 1000€ en febrero una semana")
+        respuesta = agente.responder("leon")
+        self.assertEqual(agente._origen_usuario(), "leon")
+        self.assertIn("solo permite estimar el transporte desde Madrid", respuesta)
+        self.assertEqual(len(cliente.peticiones), 1)
+        self.assertEqual(agente._faltan_datos_imprescindibles(), [])
+
+    def test_madrid_solo_conserva_semana_y_presupuesto(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "¿Cuál es el origen?"},
+            coste("oporto", dias=7, viajeros=4), propuesta(["oporto"], dias=7, viajeros=4),
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("viaje 4 personas 1000€ en febrero una semana")
+        texto = agente.responder("Madrid")
+        self.assertEqual(agente._origen_usuario(), "Madrid")
+        self.assertIn("7 días, 4 viajeros", texto)
+        self.assertIn("2500 EUR", texto)
+
+    def test_palabra_sin_pregunta_previa_no_es_origen(self):
+        cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuántos viajeros?"}])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("León")
+        self.assertIsNone(agente._origen_usuario())
+
+    def test_saludo_y_negativa_no_se_interpretan_como_ciudad(self):
+        for palabra in ("hola", "no", "sí", "gracias"):
+            with self.subTest(palabra=palabra):
+                cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuál es el origen?"}] * 2)
+                agente = AgenteViajes(cliente, mostrar=lambda t: None)
+                agente.responder("Quiero viajar")
+                agente.responder(palabra)
+                self.assertIsNone(agente._origen_usuario())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -256,6 +256,14 @@ class AgenteViajes:
         if self._origen_pendiente and afirmacion in ("si", "si por favor", "vale", "de acuerdo"):
             # Solo resuelve la pregunta concreta del programa; no un sí aislado.
             mensaje_usuario["origen_confirmado"] = self._origen_pendiente
+        elif (self.historial[-1]["role"] == "assistant"
+              and "origen" in _normalizar(self.historial[-1]["content"])
+              and "?" in self.historial[-1]["content"]
+              and re.fullmatch(r"[^\W\d_]+", texto.strip(), re.UNICODE)
+              and afirmacion not in ("si", "no", "vale", "hola", "gracias", "depende", "origen")):
+            # Una ciudad sola responde a la pregunta pendiente sobre origen.
+            # No se deduce un origen de palabras sueltas fuera de ese contexto.
+            mensaje_usuario["origen_confirmado"] = texto.strip()
         self._origen_pendiente = None
         self.historial.append(mensaje_usuario)
         origen = self._origen_usuario()
@@ -661,7 +669,7 @@ class AgenteViajes:
                                      if m["role"] == "user" and not m.get("interno")))
         numeros = r"(?:\d+|un|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)"
         mencionados = {
-            "origen": re.search(r"\bdesde\s+\w+|\bsal(?:imos|go)\s+de\s+\w+", texto),
+            "origen": self._origen_usuario() is not None,
             "duración": re.search(numeros + r"\s+(?:dias?|semanas?)\b", texto),
             "viajeros": re.search(r"\bsomos\s+" + numeros + r"\b|" + numeros
                                   + r"\s+(?:personas?|viajeros?)\b|con otra persona", texto),
