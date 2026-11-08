@@ -852,5 +852,37 @@ class TestActualizacionPresupuesto(unittest.TestCase):
         self.assertIn("630 EUR", texto)
 
 
+class TestPreguntasRepetidas(unittest.TestCase):
+    def test_pregunta_repetida_usa_solo_datos_pendientes(self):
+        saludo = {"role": "assistant", "content": "Hola. ¿Origen, duración, viajeros y presupuesto?"}
+        cliente = ClienteSimulado([saludo, saludo])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("hola")
+        respuesta = agente.responder("Quiero hacer un viaje para 4 personas en febrero del 2027")
+        self.assertIn("origen, duración, presupuesto", respuesta)
+        self.assertNotIn("viajeros", respuesta)
+        self.assertEqual(len(cliente.peticiones), 2)
+        self.assertIn("febrero del 2027", agente.historial[-2]["content"])
+
+    def test_resumen_pendientes_respeta_datos_de_turnos_anteriores(self):
+        saludo = {"role": "assistant", "content": "¿Cuáles son los datos del viaje?"}
+        cliente = ClienteSimulado([saludo, saludo])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("Somos 4 personas y salimos desde Madrid en febrero de 2027")
+        respuesta = agente.responder("Viajaremos 5 días")
+        self.assertIn("faltan estos datos: presupuesto.", respuesta)
+        self.assertNotIn("origen,", respuesta)
+        self.assertEqual(len(cliente.peticiones), 2)
+
+    def test_no_sustituye_una_pregunta_nueva(self):
+        cliente = ClienteSimulado([
+            {"role": "assistant", "content": "¿Cuántos viajeros?"},
+            {"role": "assistant", "content": "¿Cuántos días queréis viajar?"},
+        ])
+        agente = AgenteViajes(cliente, mostrar=lambda texto: None)
+        agente.responder("hola")
+        self.assertEqual(agente.responder("4 personas, en febrero"), "¿Cuántos días queréis viajar?")
+
+
 if __name__ == "__main__":
     unittest.main()

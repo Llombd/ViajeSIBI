@@ -266,6 +266,23 @@ class AgenteViajes:
                 llamadas = mensaje.get("tool_calls", [])
                 if not llamadas:
                     if mensaje.get("content", "").strip() or mensaje.get("propuesta"):
+                        # Qwen3 puede copiar un saludo anterior aunque el usuario
+                        # haya aportado datos. No gastar otro ciclo en corregirlo.
+                        texto_respuesta = mensaje.get("content", "")
+                        repetida = any(
+                            anterior["role"] == "assistant"
+                            and " ".join(_normalizar(anterior.get("content", "")).split())
+                            == " ".join(_normalizar(texto_respuesta).split())
+                            for anterior in self.historial[:-1]
+                        )
+                        faltan = self._faltan_datos_imprescindibles()
+                        if not mensaje.get("propuesta") and repetida and "?" in texto_respuesta and faltan:
+                            mensaje["content"] = (
+                                "Para continuar con el viaje que indicas, faltan estos datos: "
+                                + ", ".join(faltan) + ". ¿Puedes indicarlos? "
+                                "Conservo la información que ya has dado."
+                            )
+                            return mensaje["content"]
                         respuesta, error = self._validar_respuesta(mensaje)
                         if not error and objetivo > 1 and mensaje.get("propuesta", {}).get("tipo") == "recomendacion":
                             ampliada = self._completar_multiple(mensaje["propuesta"], objetivo)

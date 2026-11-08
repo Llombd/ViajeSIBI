@@ -38,6 +38,16 @@ class TestInterfaz(unittest.TestCase):
         self.assertEqual(len(app.chat_message), 4)
         self.assertEqual(cliente.peticiones[1][1]["content"], "Salimos desde Madrid.")
 
+    def test_saludo_repetido_no_vuelve_a_pedir_viajeros(self):
+        saludo = {"role": "assistant", "content": "Hola. ¿Origen, duración, viajeros y presupuesto?"}
+        app, _ = self.abrir([saludo, saludo])
+        app.chat_input[0].set_value("hola").run()
+        app.chat_input[0].set_value("Quiero un viaje para 4 personas en febrero de 2027").run()
+        self.assertFalse(app.exception)
+        respuesta = app.markdown[-1].value
+        self.assertIn("origen, duración, presupuesto", respuesta)
+        self.assertNotIn("viajeros", respuesta)
+
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])
         app.chat_input[0].set_value("Somos 2 personas, 4 días desde Madrid, cultura y 800 EUR en total. Recomienda un destino.").run()
