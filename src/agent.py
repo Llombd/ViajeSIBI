@@ -115,6 +115,9 @@ class ClienteOllama:
             mensajes_api.insert(0, {"role": "system", "content": INSTRUCCIONES})
         for mensaje in mensajes_api:
             mensaje.pop("interno", None)
+            origen_confirmado = mensaje.pop("origen_confirmado", None)
+            if origen_confirmado and mensaje.get("role") == "user":
+                mensaje["content"] += f"\nConfirmo que salimos desde {origen_confirmado}."
             if mensaje.get("tool_calls"):
                 # Conserva el mismo protocolo JSON al reenviar las decisiones.
                 funcion = mensaje.pop("tool_calls")[0]["function"]
@@ -238,6 +241,7 @@ class AgenteViajes:
         self.mostrar = mostrar
         self.max_consultas = max_consultas
         self.max_herramientas = max_herramientas
+        self._origen_pendiente = None
         self.historial = [{"role": "system", "content": INSTRUCCIONES
                           + f"\nLímites: {max_consultas} consultas al modelo y "
                           + f"{max_herramientas} intentos de herramientas por turno."}]
@@ -246,7 +250,14 @@ class AgenteViajes:
         if not isinstance(texto, str) or not texto.strip():
             raise ValueError("Escribe una petición no vacía.")
         inicio = len(self.historial)
-        self.historial.append({"role": "user", "content": texto})
+        pendiente_anterior = self._origen_pendiente
+        mensaje_usuario = {"role": "user", "content": texto}
+        afirmacion = " ".join(re.sub(r"[^\w\s]", "", _normalizar(texto)).split())
+        if self._origen_pendiente and afirmacion in ("si", "si por favor", "vale", "de acuerdo"):
+            # Solo resuelve la pregunta concreta del programa; no un sí aislado.
+            mensaje_usuario["origen_confirmado"] = self._origen_pendiente
+        self._origen_pendiente = None
+        self.historial.append(mensaje_usuario)
         origen = self._origen_usuario()
         origenes = {
             _normalizar(ciudad)
@@ -254,11 +265,12 @@ class AgenteViajes:
             for ciudad in destino["costes"]["transporte_ida_vuelta_por_persona"]
         }
         if origen and _normalizar(origen) not in origenes:
+            self._origen_pendiente = "Madrid"
             return self._terminar(
                 f"Has indicado {origen} como origen. El catálogo actual solo permite estimar "
                 "el transporte desde Madrid, así que no puedo calcular el coste total desde "
                 f"{origen}. No cambiaré tu origen automáticamente. "
-                "¿Quieres usar Madrid para esta demostración? Si es así, indica «desde Madrid»; "
+                "¿Quieres usar Madrid para esta demostración? Puedes responder «sí» o «desde Madrid»; "
                 "si mantienes el origen actual, no disponemos de esos costes. "
                 "Conservo los demás datos del viaje."
             )
@@ -406,6 +418,7 @@ class AgenteViajes:
         except ErrorOllama:
             # Evita dejar llamadas pendientes y conserva los turnos anteriores.
             del self.historial[inicio:]
+            self._origen_pendiente = pendiente_anterior
             raise
         if parcial is not None:
             respuesta = self._respuesta_al_limite(parcial, objetivo)
@@ -630,6 +643,8 @@ class AgenteViajes:
                 )
                 if coincidencias:
                     origen = coincidencias[-1]
+                elif mensaje.get("origen_confirmado"):
+                    origen = mensaje["origen_confirmado"]
         return origen
 
     def _faltan_datos_imprescindibles(self):

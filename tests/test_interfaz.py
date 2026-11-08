@@ -69,6 +69,14 @@ class TestInterfaz(unittest.TestCase):
         self.assertEqual(agente._origen_usuario(), "leon")
         self.assertEqual(cliente.peticiones, [])
 
+    def test_si_confirma_madrid_tras_pregunta_del_programa(self):
+        app, _ = self.abrir([{"role": "assistant", "content": "¿Cuántos días quieres viajar?"}])
+        app.chat_input[0].set_value("Quiero un viaje para 4 personas desde León con 1000 EUR").run()
+        app.chat_input[0].set_value("sí").run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.session_state["agente"]._origen_usuario(), "Madrid")
+        self.assertEqual(app.markdown[-1].value, "¿Cuántos días quieres viajar?")
+
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])
         app.chat_input[0].set_value("Somos 2 personas, 4 días desde Madrid, cultura y 800 EUR en total. Recomienda un destino.").run()

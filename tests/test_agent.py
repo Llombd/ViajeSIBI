@@ -962,5 +962,50 @@ class TestSemanasYOrigen(unittest.TestCase):
         self.assertEqual(agente._origen_usuario(), "León")
 
 
+class TestConfirmarOrigen(unittest.TestCase):
+    def test_si_acepta_solo_la_alternativa_preguntada(self):
+        for confirmacion in ("sí", "si", "Sí, por favor", "vale", "de acuerdo"):
+            with self.subTest(confirmacion=confirmacion):
+                cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuántos días?"}])
+                agente = AgenteViajes(cliente, mostrar=lambda t: None)
+                agente.responder("Somos 4 personas y salimos desde León, 1000 EUR")
+                respuesta = agente.responder(confirmacion)
+                self.assertEqual(agente._origen_usuario(), "Madrid")
+                self.assertEqual(respuesta, "¿Cuántos días?")
+                self.assertEqual(agente.historial[-2]["content"], confirmacion)
+
+    def test_no_y_si_aislado_no_cambian_el_origen(self):
+        agente = AgenteViajes(ClienteSimulado([]), mostrar=lambda t: None)
+        agente.responder("Desde León")
+        agente.responder("No, quiero salir desde León")
+        self.assertEqual(agente._origen_usuario(), "León")
+        cliente = ClienteSimulado([{"role": "assistant", "content": "¿Desde dónde sales?"}])
+        nuevo = AgenteViajes(cliente, mostrar=lambda t: None)
+        nuevo.responder("sí")
+        self.assertIsNone(nuevo._origen_usuario())
+
+    def test_error_ollama_restaura_confirmacion_pendiente(self):
+        cliente = ClienteSimulado([ErrorOllama("Sin conexión"), {"role": "assistant", "content": "¿Cuántos días?"}])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("Desde León")
+        with self.assertRaises(ErrorOllama):
+            agente.responder("sí")
+        agente.responder("sí")
+        self.assertEqual(agente._origen_usuario(), "Madrid")
+
+    def test_cliente_envia_confirmacion_sin_metadatos(self):
+        respuesta = MagicMock()
+        respuesta.__enter__.return_value.read.return_value = json.dumps({
+            "message": {"role": "assistant", "content": json.dumps({
+                "herramienta": "ninguna", "argumentos": {}, "respuesta": "¿Cuántos días?",
+            })},
+        }).encode()
+        with patch("src.agent.urlopen", return_value=respuesta) as abrir:
+            ClienteOllama().chat([{"role": "user", "content": "sí", "origen_confirmado": "Madrid"}])
+        mensaje = json.loads(abrir.call_args.args[0].data)["messages"][-1]
+        self.assertNotIn("origen_confirmado", mensaje)
+        self.assertIn("desde Madrid", mensaje["content"])
+
+
 if __name__ == "__main__":
     unittest.main()
