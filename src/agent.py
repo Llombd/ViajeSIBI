@@ -259,6 +259,7 @@ class AgenteViajes:
         ejecuciones = 0
         objetivo = self._cantidad_solicitada()
         parcial = None
+        errores_seguidos = 0
         try:
             for consulta in range(self.max_consultas):
                 mensaje = copy.deepcopy(self.cliente.chat(self.historial))
@@ -308,6 +309,19 @@ class AgenteViajes:
                         if error:
                             # No conservar una recomendación inventada como si fuera válida.
                             self.historial.pop()
+                            errores_seguidos += 1
+                            hay_costes = any(
+                                m["role"] == "tool" and m.get("tool_name") == "estimar_coste"
+                                and "error" not in json.loads(m["content"])
+                                for m in self.historial[inicio:]
+                            )
+                            if errores_seguidos >= 2 and faltan and not hay_costes:
+                                # No dejar que una aclaración inicial consuma el turno.
+                                return self._terminar(
+                                    "Para continuar, necesito estos datos: " + ", ".join(faltan)
+                                    + ". ¿Puedes indicarlos? El presupuesto debe ser el total del grupo, "
+                                    "con su moneda. Conservo los datos que ya has dado."
+                                )
                             self.historial.append({
                                 "role": "user", "interno": True,
                                 "content": "Validación del programa: " + error
@@ -320,6 +334,7 @@ class AgenteViajes:
                     return self._terminar("El modelo devolvió una respuesta vacía. Reformula la petición.")
 
                 limite = False
+                errores_seguidos = 0
                 for llamada in llamadas:
                     funcion = llamada["function"]
                     nombre = funcion["name"]
@@ -650,7 +665,9 @@ class AgenteViajes:
                 "origen, duracion_dias, viajeros y presupuesto_total. "
                 "Si faltan estimaciones, solicita herramientas en lugar de escribir precios."
             )
-        if re.search(r"EUR\b|euros?\b|€", texto, re.I):
+        # Nombrar la moneda en una pregunta no equivale a inventar un precio.
+        pregunta_moneda = "?" in texto and not re.search(r"\d", texto) and not menciona_destino
+        if re.search(r"EUR\b|euros?\b|€", texto, re.I) and not pregunta_moneda:
             return None, "No incluyas importes en texto libre; usa la propuesta estructurada."
         return texto, None
 

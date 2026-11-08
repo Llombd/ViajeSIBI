@@ -884,5 +884,39 @@ class TestPreguntasRepetidas(unittest.TestCase):
         self.assertEqual(agente.responder("4 personas, en febrero"), "¿Cuántos días queréis viajar?")
 
 
+class TestAclaracionSinBucles(unittest.TestCase):
+    def test_pregunta_por_moneda_sin_importes_es_valida(self):
+        cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuál es tu presupuesto total en euros?"}])
+        respuesta = AgenteViajes(cliente, mostrar=lambda t: None).responder("hola")
+        self.assertEqual(respuesta, "¿Cuál es tu presupuesto total en euros?")
+        self.assertEqual(len(cliente.peticiones), 1)
+
+    def test_hola_no_agota_turno_si_modelo_inventa_presupuesto(self):
+        cliente = ClienteSimulado([propuesta(["oporto"], "recomendacion", 800)] * 2)
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        respuesta = agente.responder("hola")
+        self.assertIn("origen, duración, viajeros, presupuesto", respuesta)
+        self.assertNotIn("límite", respuesta)
+        self.assertNotIn("800", respuesta)
+        self.assertEqual(len(cliente.peticiones), 2)
+
+    def test_aclaracion_conserva_viajeros_y_mes(self):
+        cliente = ClienteSimulado([{"role": "assistant", "content": "Te recomiendo destinos con precios sin comprobar."}] * 2)
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        respuesta = agente.responder("quiero ahcer un viaje de 4 personas en febrero del 2027")
+        self.assertIn("origen, duración, presupuesto", respuesta)
+        self.assertNotIn("viajeros", respuesta)
+        self.assertIn("febrero del 2027", agente.historial[1]["content"])
+        self.assertEqual(len(cliente.peticiones), 2)
+
+    def test_importe_no_se_permite_por_tener_interrogacion(self):
+        agente = AgenteViajes(mostrar=lambda t: None)
+        for texto in ("¿Tu presupuesto es 800 euros?", "¿Lisboa cuesta 800 EUR?", "¿Te recomiendo Lisboa?"):
+            with self.subTest(texto=texto):
+                respuesta, error = agente._validar_respuesta({"role": "assistant", "content": texto})
+                self.assertIsNotNone(error)
+                self.assertIsNone(respuesta)
+
+
 if __name__ == "__main__":
     unittest.main()

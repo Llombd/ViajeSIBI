@@ -48,6 +48,17 @@ class TestInterfaz(unittest.TestCase):
         self.assertIn("origen, duración, presupuesto", respuesta)
         self.assertNotIn("viajeros", respuesta)
 
+    def test_validaciones_iniciales_terminan_en_aclaracion(self):
+        inventada = propuesta(["oporto"], "recomendacion", 800)
+        app, cliente = self.abrir([inventada] * 4)
+        app.chat_input[0].set_value("hola").run()
+        self.assertIn("origen, duración, viajeros, presupuesto", app.markdown[-1].value)
+        app.chat_input[0].set_value("quiero ahcer un viaje de 4 personas en febrero del 2027").run()
+        self.assertFalse(app.exception)
+        self.assertIn("origen, duración, presupuesto", app.markdown[-1].value)
+        self.assertNotIn("límite", app.markdown[-1].value)
+        self.assertEqual(len(cliente.peticiones), 4)
+
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])
         app.chat_input[0].set_value("Somos 2 personas, 4 días desde Madrid, cultura y 800 EUR en total. Recomienda un destino.").run()
