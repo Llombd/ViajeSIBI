@@ -100,6 +100,37 @@ def gestionar_conversaciones():
     st.caption("Las conversaciones se guardan durante esta sesión. Guarda el chat actual antes de cambiar si quieres conservarlo. Al recargar o cerrar la pestaña se perderán.")
 
 
+def formulario_viaje():
+    with st.expander("Introducir los datos en un formulario"):
+        with st.form("datos_viaje"):
+            origen = st.text_input("Ciudad de salida")
+            izquierda, derecha = st.columns(2)
+            with izquierda:
+                dias = st.number_input("Duración en días", min_value=1, value=4, step=1)
+            with derecha:
+                viajeros = st.number_input("Número de viajeros", min_value=1, value=2, step=1)
+            presupuesto = st.number_input("Presupuesto total en euros", min_value=0.0, step=50.0, format="%.2f")
+            region = st.text_input("Región (opcional)")
+            intereses = st.text_input("Intereses (opcional)")
+            enviar = st.form_submit_button("Enviar al chat", type="primary")
+
+        if enviar:
+            if not origen.strip() or round(presupuesto, 2) <= 0:
+                st.warning("Indica la ciudad de salida y un presupuesto mayor que cero.")
+                return None
+            importe = f"{presupuesto:.2f}".rstrip("0").rstrip(".").replace(".", ",")
+            consulta = (
+                f"Busco un viaje de {dias} días desde {origen.strip()} para {viajeros} personas. "
+                f"Mi presupuesto total es de {importe} EUR."
+            )
+            if region.strip():
+                consulta += f" Prefiero la región {region.strip()}."
+            if intereses.strip():
+                consulta += f" Me interesa: {intereses.strip()}."
+            return consulta + " ¿Qué destinos me recomiendas?"
+    return None
+
+
 def main():
     st.set_page_config(page_title="ViajeSIBI", page_icon="🧳", layout="wide")
     # Cada pestaña tiene su propio agente; nunca se comparte con otros usuarios.
@@ -121,10 +152,11 @@ def main():
         st.markdown("**Ciudad de salida** · **Duración** · **Número de viajeros** · **Presupuesto total y moneda**")
         st.caption("Región e intereses son opcionales. El catálogo permite estimar el transporte desde Madrid.")
 
+    consulta_formulario = formulario_viaje()
     for mensaje in st.session_state.mensajes:
         mostrar_mensaje(mensaje)
 
-    texto = st.chat_input("Escribe aquí qué viaje tienes en mente…")
+    texto = st.chat_input("Escribe aquí qué viaje tienes en mente…") or consulta_formulario
     if texto and texto.strip():
         usuario = {"role": "user", "content": texto}
         st.session_state.mensajes.append(usuario)

@@ -104,7 +104,7 @@ class TestInterfaz(unittest.TestCase):
         contenido = "\n".join(elemento.value for elemento in app.markdown)
         self.assertIn("770 EUR", contenido)
         self.assertIn("30 EUR", contenido)
-        self.assertEqual(app.expander[0].label, "Herramientas y validaciones")
+        self.assertIn("Herramientas y validaciones", [panel.label for panel in app.expander])
         self.assertIn("estimar_coste", app.code[0].value)
 
     def test_error_de_ollama_se_muestra_y_permite_reintentar(self):
@@ -137,3 +137,23 @@ class TestInterfaz(unittest.TestCase):
         self.assertFalse(app.exception)
         self.assertEqual(app.session_state["agente"]._origen_usuario(), "Madrid")
         self.assertIn("faltan: duración", app.markdown[-1].value)
+
+    def test_formulario_envia_los_datos_al_mismo_chat(self):
+        app, cliente = self.abrir([{"role": "assistant", "content": "¿Tienes algún interés adicional?"}])
+        def enviar():
+            next(boton for boton in app.button if boton.label == "Enviar al chat").click().run()
+
+        enviar()
+        self.assertTrue(app.warning)
+        self.assertEqual(cliente.peticiones, [])
+        app.text_input[0].set_value("Madrid")
+        app.number_input[2].set_value(800.50)
+        app.text_input[2].set_value("cultura")
+        enviar()
+        self.assertFalse(app.exception)
+        self.assertEqual(len(app.chat_message), 2)
+        self.assertEqual(len(cliente.peticiones), 1)
+        peticion = cliente.peticiones[0][-1]["content"]
+        self.assertIn("4 días desde Madrid para 2 personas", peticion)
+        self.assertIn("800,5 EUR", peticion)
+        self.assertIn("cultura", peticion)
