@@ -124,3 +124,16 @@ class TestInterfaz(unittest.TestCase):
         self.assertEqual(len(app.chat_message), 0)
         self.assertIsNot(app.session_state["agente"], anterior)
         self.assertEqual(len(app.session_state["agente"].historial), 1)
+
+    def test_guardar_y_reabrir_conserva_la_pregunta_pendiente(self):
+        app, _ = self.abrir()
+        app.chat_input[0].set_value("Desde León").run()
+        for etiqueta in ("Guardar conversación", "Nueva conversación"):
+            next(boton for boton in app.button if boton.label == etiqueta).click().run()
+        self.assertEqual(len(app.chat_message), 0)
+        next(boton for boton in app.button if boton.label == "Abrir conversación").click().run()
+        self.assertEqual(len(app.chat_message), 2)
+        app.chat_input[0].set_value("sí").run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.session_state["agente"]._origen_usuario(), "Madrid")
+        self.assertIn("faltan: duración", app.markdown[-1].value)

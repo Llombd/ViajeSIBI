@@ -1,5 +1,7 @@
 """Interfaz local: python3 -m streamlit run app.py --server.address 127.0.0.1."""
 
+from copy import deepcopy
+
 import streamlit as st
 
 from src.agent import AgenteViajes, ErrorOllama
@@ -65,26 +67,59 @@ def mostrar_mensaje(mensaje):
                 st.code("\n\n".join(mensaje["trazas"]), language=None)
 
 
+def gestionar_conversaciones():
+    estado = st.session_state
+    if st.button("Nueva conversación", use_container_width=True):
+        estado.agente = AgenteViajes(mostrar=lambda texto: None)
+        estado.mensajes = []
+        estado.conversacion_activa = None
+        st.rerun()
+
+    st.subheader("Conversaciones guardadas")
+    guardadas = estado.conversaciones_guardadas
+    if st.button("Guardar conversación", disabled=not estado.mensajes, use_container_width=True):
+        titulo = " ".join(estado.mensajes[0]["content"].split())
+        copia = (titulo, deepcopy(estado.agente), deepcopy(estado.mensajes))
+        if estado.conversacion_activa is None:
+            estado.conversacion_activa = len(guardadas)
+            guardadas.append(copia)
+        else:
+            guardadas[estado.conversacion_activa] = copia
+        st.success("Conversación guardada.")
+
+    if guardadas:
+        seleccion = st.selectbox(
+            "Selecciona una conversación",
+            range(len(guardadas)),
+            format_func=lambda indice: f"{indice + 1}. {guardadas[indice][0][:60]}",
+        )
+        if st.button("Abrir conversación", use_container_width=True):
+            _, estado.agente, estado.mensajes = deepcopy(guardadas[seleccion])
+            estado.conversacion_activa = seleccion
+            st.rerun()
+    st.caption("Las conversaciones se guardan durante esta sesión. Guarda el chat actual antes de cambiar si quieres conservarlo. Al recargar o cerrar la pestaña se perderán.")
+
+
 def main():
     st.set_page_config(page_title="ViajeSIBI", page_icon="🧳", layout="wide")
     # Cada pestaña tiene su propio agente; nunca se comparte con otros usuarios.
     if "agente" not in st.session_state:
         st.session_state.agente = AgenteViajes(mostrar=lambda texto: None)
         st.session_state.mensajes = []
+    st.session_state.setdefault("conversaciones_guardadas", [])
+    st.session_state.setdefault("conversacion_activa", None)
 
     with st.sidebar:
         st.title("🧳 ViajeSIBI")
         st.caption("Agente local · Ollama y Qwen3")
-        if st.button("Nueva conversación", use_container_width=True):
-            st.session_state.agente = AgenteViajes(mostrar=lambda texto: None)
-            st.session_state.mensajes = []
-            st.rerun()
-        st.subheader("Qué indicar")
-        st.caption("- Ciudad de salida\n- Duración del viaje\n- Número de viajeros\n- Presupuesto total y moneda")
-        st.caption("Puedes añadir región e intereses. El catálogo permite estimar el transporte desde Madrid.")
+        gestionar_conversaciones()
 
     mostrar_cabecera()
     st.caption("Demostración universitaria · 15 destinos · Datos ficticios del catálogo")
+    with st.container(border=True):
+        st.subheader("Qué indicar en tu consulta")
+        st.markdown("**Ciudad de salida** · **Duración** · **Número de viajeros** · **Presupuesto total y moneda**")
+        st.caption("Región e intereses son opcionales. El catálogo permite estimar el transporte desde Madrid.")
 
     for mensaje in st.session_state.mensajes:
         mostrar_mensaje(mensaje)
