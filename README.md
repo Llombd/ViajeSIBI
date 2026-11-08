@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 123 pruebas con la interfaz instalada (113 del núcleo y 10 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 127 pruebas con la interfaz instalada (116 del núcleo y 11 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -139,7 +139,7 @@ data/
   destinos.json        Los 15 destinos y todos los datos ficticios
 tests/
   test_tools.py        Las 11 pruebas originales de herramientas
-  test_agent.py        88 pruebas del bucle, cliente y regresiones con respuestas simuladas
+  test_agent.py        91 pruebas del bucle, cliente y regresiones con respuestas simuladas
   test_presentacion.py 14 pruebas del formato, márgenes y datos mostrados
 evals/
   casos.json           Cinco escenarios; sin evaluador automático del LLM
@@ -157,7 +157,7 @@ cd /Users/lucia/Documents/viajeSIBI
 python3 -m unittest discover -s tests -v
 ~~~
 
-Hay 113 pruebas del núcleo. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
+Hay 116 pruebas del núcleo. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
 
 Ejemplo de uso en Python, desde la carpeta del proyecto:
 
@@ -322,13 +322,13 @@ Prueba: «Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y 
 
 La terminal anterior sigue disponible con `python3 -m src.main`. Streamlit es opcional para ese modo. `app.py` contiene únicamente la interfaz; el agente continúa en `src/agent.py`.
 
-Para ejecutar todas las pruebas, incluidas las diez pruebas de interfaz, sin necesitar Ollama:
+Para ejecutar todas las pruebas, incluidas las once pruebas de interfaz, sin necesitar Ollama:
 
 ~~~bash
 .venv/bin/python -B -m unittest discover -s tests
 ~~~
 
-Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas diez pruebas y siguen ejecutándose las 113 del agente, herramientas y presentación.
+Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas once pruebas y siguen ejecutándose las 116 del agente, herramientas y presentación.
 
 ### Preguntas repetidas
 
@@ -347,3 +347,5 @@ Cuando el programa propone Madrid porque el origen no tiene costes, puedes respo
 Tras confirmar Madrid con una respuesta breve, si aún faltan datos esenciales, Python pregunta directamente por ellos antes de llamar al modelo. Así la confirmación no provoca intentos de herramientas sin duración o presupuesto confirmado.
 
 Si el agente acaba de preguntar por el origen, puedes responder solo «León» o «Madrid». Esa respuesta se conserva como origen indicado por el usuario, sin exigir el prefijo «desde». La detección actual reconoce ciudades de una palabra y no convierte saludos o negativas en ciudades. Fuera de una pregunta sobre origen, una palabra suelta no establece ese dato. Cuatro pruebas del agente y una de interfaz cubren las respuestas cortas y la conservación de semanas, viajeros y presupuesto.
+
+También puedes responder al origen y al presupuesto juntos: si se han preguntado esos datos, «León 1000€» conserva ambos. Para reconocer la ciudad se aparta solo el importe con moneda; el mensaje original permanece en el historial. Un importe solo no establece un origen. Tres pruebas del agente y una de interfaz reproducen este caso.

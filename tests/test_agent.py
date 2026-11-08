@@ -1047,5 +1047,35 @@ class TestRespuestaCortaOrigen(unittest.TestCase):
                 self.assertIsNone(agente._origen_usuario())
 
 
+class TestOrigenConPresupuesto(unittest.TestCase):
+    def test_ciudad_y_presupuesto_en_la_misma_respuesta(self):
+        for texto in ("leon 1000€", "León, 1.000 EUR", "1000 euros León"):
+            with self.subTest(texto=texto):
+                cliente = ClienteSimulado([{"role": "assistant", "content": "¿Origen y presupuesto?"}])
+                agente = AgenteViajes(cliente, mostrar=lambda t: None)
+                agente.responder("4 personas febrero una semana")
+                respuesta = agente.responder(texto)
+                self.assertEqual(agente._origen_usuario().casefold().replace("ó", "o"), "leon")
+                self.assertEqual(agente._presupuesto_usuario(), 1000)
+                self.assertEqual(agente._faltan_datos_imprescindibles(), [])
+                self.assertIn("solo permite estimar el transporte desde Madrid", respuesta)
+                self.assertEqual(len(cliente.peticiones), 1)
+
+    def test_presupuesto_solo_no_se_convierte_en_origen(self):
+        cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuál es el origen?"}] * 2)
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("4 personas febrero una semana")
+        agente.responder("1000€")
+        self.assertIsNone(agente._origen_usuario())
+        self.assertEqual(agente._presupuesto_usuario(), 1000)
+
+    def test_ciudad_con_presupuesto_no_es_origen_sin_pregunta_previa(self):
+        cliente = ClienteSimulado([{"role": "assistant", "content": "¿Cuál es el origen?"}])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("leon 1000€")
+        self.assertIsNone(agente._origen_usuario())
+        self.assertEqual(agente._presupuesto_usuario(), 1000)
+
+
 if __name__ == "__main__":
     unittest.main()

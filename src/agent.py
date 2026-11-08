@@ -253,17 +253,22 @@ class AgenteViajes:
         pendiente_anterior = self._origen_pendiente
         mensaje_usuario = {"role": "user", "content": texto}
         afirmacion = " ".join(re.sub(r"[^\w\s]", "", _normalizar(texto)).split())
+        # En una respuesta como «León 1000€», el importe no forma parte
+        # del nombre de la ciudad. Se conserva el mensaje completo en el historial.
+        ciudad_respuesta = re.sub(
+            r"\b\d+(?:[.,]\d+)*\s*(?:€|euros?\b|EUR\b)", "", texto, flags=re.I,
+        ).strip(" ,.;")
         if self._origen_pendiente and afirmacion in ("si", "si por favor", "vale", "de acuerdo"):
             # Solo resuelve la pregunta concreta del programa; no un sí aislado.
             mensaje_usuario["origen_confirmado"] = self._origen_pendiente
         elif (self.historial[-1]["role"] == "assistant"
               and "origen" in _normalizar(self.historial[-1]["content"])
               and "?" in self.historial[-1]["content"]
-              and re.fullmatch(r"[^\W\d_]+", texto.strip(), re.UNICODE)
-              and afirmacion not in ("si", "no", "vale", "hola", "gracias", "depende", "origen")):
+              and re.fullmatch(r"[^\W\d_]+", ciudad_respuesta, re.UNICODE)
+              and _normalizar(ciudad_respuesta) not in ("si", "no", "vale", "hola", "gracias", "depende", "origen")):
             # Una ciudad sola responde a la pregunta pendiente sobre origen.
             # No se deduce un origen de palabras sueltas fuera de ese contexto.
-            mensaje_usuario["origen_confirmado"] = texto.strip()
+            mensaje_usuario["origen_confirmado"] = ciudad_respuesta
         self._origen_pendiente = None
         self.historial.append(mensaje_usuario)
         origen = self._origen_usuario()

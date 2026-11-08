@@ -86,6 +86,17 @@ class TestInterfaz(unittest.TestCase):
         self.assertEqual(app.session_state["agente"]._faltan_datos_imprescindibles(), [])
         self.assertEqual(len(cliente.peticiones), 1)
 
+    def test_origen_y_presupuesto_juntos_tras_pregunta(self):
+        app, cliente = self.abrir([{"role": "assistant", "content": "¿Origen y presupuesto?"}])
+        app.chat_input[0].set_value("4 personas febrero una semana").run()
+        app.chat_input[0].set_value("leon 1000€").run()
+        self.assertFalse(app.exception)
+        self.assertIn("Has indicado leon como origen", app.markdown[-1].value)
+        agente = app.session_state["agente"]
+        self.assertEqual(agente._presupuesto_usuario(), 1000)
+        self.assertEqual(agente._faltan_datos_imprescindibles(), [])
+        self.assertEqual(len(cliente.peticiones), 1)
+
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])
         app.chat_input[0].set_value("Somos 2 personas, 4 días desde Madrid, cultura y 800 EUR en total. Recomienda un destino.").run()
