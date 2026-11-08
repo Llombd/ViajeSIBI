@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 127 pruebas con la interfaz instalada (116 del núcleo y 11 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 128 pruebas con la interfaz instalada (116 del núcleo y 12 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -299,7 +299,7 @@ Ocho pruebas adicionales verifican la aclaración, la sustitución del presupues
 
 ## Interfaz local con Streamlit
 
-La interfaz ofrece un chat, las mismas tablas verificadas, un desplegable de herramientas y validaciones por respuesta y un botón «Nueva conversación». Reutiliza el agente sin cambiar sus decisiones, costes ni límites. El historial se conserva por sesión de navegador; no se guarda en disco y puede perderse al recargar la página. No se comparte el agente entre sesiones. Los detalles de herramientas se pueden abrir cuando termina cada respuesta.
+La interfaz ofrece tres ejemplos para iniciar el chat con un clic. En la barra lateral están la guía de datos del viaje y el botón «Nueva conversación». Las respuestas separan el resumen del viaje de la tabla de costes y muestran las herramientas y validaciones en un desplegable. Reutiliza el agente sin cambiar sus decisiones, costes ni límites. El historial se conserva por sesión de navegador; no se guarda en disco y puede perderse al recargar la página. No se comparte el agente entre sesiones. Los detalles de herramientas se pueden abrir cuando termina cada respuesta.
 
 Desde la carpeta del proyecto, prepara un entorno separado (solo la primera vez):
 
@@ -322,13 +322,13 @@ Prueba: «Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y 
 
 La terminal anterior sigue disponible con `python3 -m src.main`. Streamlit es opcional para ese modo. `app.py` contiene únicamente la interfaz; el agente continúa en `src/agent.py`.
 
-Para ejecutar todas las pruebas, incluidas las once pruebas de interfaz, sin necesitar Ollama:
+Para ejecutar todas las pruebas, incluidas las doce pruebas de interfaz, sin necesitar Ollama:
 
 ~~~bash
 .venv/bin/python -B -m unittest discover -s tests
 ~~~
 
-Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas once pruebas y siguen ejecutándose las 116 del agente, herramientas y presentación.
+Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas doce pruebas y siguen ejecutándose las 116 del agente, herramientas y presentación.
 
 ### Preguntas repetidas
 
