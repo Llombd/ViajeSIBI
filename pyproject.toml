@@ -4,3 +4,6 @@ version = "0.1.0"
 description = "Agente de recomendación de viajes con Ollama local y herramientas"
 requires-python = ">=3.10"
 dependencies = []
+
+[project.optional-dependencies]
+interfaz = ["streamlit>=1.32,<2"]

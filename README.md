@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal con Ollama local y qwen3:4b. Pasan 93 pruebas, incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 98 pruebas con la interfaz instalada (93 del núcleo y 5 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -24,7 +24,7 @@ Las instrucciones piden al agente que pregunte si faltan datos necesarios y expl
 
 ## Arquitectura
 
-Usamos Python y su biblioteca estándar, sin dependencias externas. El catálogo está en JSON. El modelo qwen3:4b se ejecuta en Ollama local. Python envía peticiones HTTP a http://localhost:11434/api/chat mediante urllib.request. No se usa un SDK, una API de pago ni claves.
+El agente y la terminal usan Python y su biblioteca estándar. La interfaz opcional utiliza Streamlit. El catálogo está en JSON. El modelo qwen3:4b se ejecuta en Ollama local. Python envía peticiones HTTP a http://localhost:11434/api/chat mediante urllib.request. No se usa un SDK, una API de pago ni claves.
 
 ~~~text
 Usuario ↔ interfaz ↔ controlador del bucle ↔ LLM
@@ -296,3 +296,36 @@ python3 -B -m unittest discover -s tests
 Si escribes «tenemos 1400» o «presupuesto máximo: 1400», el programa pregunta si se trata del presupuesto total en EUR antes de consultar al modelo. No conserva un presupuesto anterior como si siguiera confirmado ni repite validaciones hasta agotar el turno. Responde, por ejemplo, «1400 EUR en total»; un «sí» sin importe y moneda mantiene la aclaración pendiente. Los demás datos del viaje y los costes comprobados permanecen en el historial. Cantidades de días, viajeros o destinos no se consideran presupuestos.
 
 Ocho pruebas adicionales verifican la aclaración, la sustitución del presupuesto anterior, la confirmación, la conservación del viaje, los formatos numéricos, la exclusión de mensajes internos y las tres recomendaciones después de confirmar. Se ejecutan con el mismo comando de pruebas, sin Ollama.
+
+## Interfaz local con Streamlit
+
+La interfaz ofrece un chat, las mismas tablas verificadas, un desplegable de herramientas y validaciones por respuesta y un botón «Nueva conversación». Reutiliza el agente sin cambiar sus decisiones, costes ni límites. El historial se conserva por sesión de navegador; no se guarda en disco y puede perderse al recargar la página. No se comparte el agente entre sesiones. Los detalles de herramientas se pueden abrir cuando termina cada respuesta.
+
+Desde la carpeta del proyecto, prepara un entorno separado (solo la primera vez):
+
+~~~bash
+cd /Users/lucia/Documents/viajeSIBI
+python3 -m venv .venv
+.venv/bin/python -m pip install 'streamlit>=1.32,<2'
+~~~
+
+Abre Ollama con el modelo `qwen3:4b` disponible. Para iniciar la interfaz:
+
+~~~bash
+cd /Users/lucia/Documents/viajeSIBI
+.venv/bin/python -m streamlit run app.py --server.address 127.0.0.1 --browser.gatherUsageStats false
+~~~
+
+Abre http://127.0.0.1:8501 en el navegador. Para detener la interfaz, pulsa Ctrl+C en la terminal que la inició. No necesitas claves ni cuentas. La aplicación escucha solo en tu Mac; las peticiones al modelo siguen dirigidas a Ollama local. El coste de los destinos es ficticio.
+
+Prueba: «Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y tenemos 1400 EUR en total. Recomienda hasta tres destinos». También puedes escribir «tenemos 1400» y confirmar la moneda en el siguiente mensaje. Si Ollama no responde, verás el error y podrás volver a enviar tu petición después de abrirlo. El botón «Nueva conversación» elimina el historial de esa sesión y empieza con otro agente.
+
+La terminal anterior sigue disponible con `python3 -m src.main`. Streamlit es opcional para ese modo. `app.py` contiene únicamente la interfaz; el agente continúa en `src/agent.py`.
+
+Para ejecutar todas las pruebas, incluidas las cinco nuevas de interfaz, sin necesitar Ollama:
+
+~~~bash
+.venv/bin/python -B -m unittest discover -s tests
+~~~
+
+Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas cinco pruebas y siguen ejecutándose las 93 del agente, herramientas y presentación.
