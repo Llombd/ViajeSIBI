@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 107 pruebas con la interfaz instalada (100 del núcleo y 7 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 113 pruebas con la interfaz instalada (105 del núcleo y 8 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -139,7 +139,7 @@ data/
   destinos.json        Los 15 destinos y todos los datos ficticios
 tests/
   test_tools.py        Las 11 pruebas originales de herramientas
-  test_agent.py        75 pruebas del bucle, cliente y regresiones con respuestas simuladas
+  test_agent.py        80 pruebas del bucle, cliente y regresiones con respuestas simuladas
   test_presentacion.py 14 pruebas del formato, márgenes y datos mostrados
 evals/
   casos.json           Cinco escenarios; sin evaluador automático del LLM
@@ -157,7 +157,7 @@ cd /Users/lucia/Documents/viajeSIBI
 python3 -m unittest discover -s tests -v
 ~~~
 
-Hay 100 pruebas del núcleo. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
+Hay 105 pruebas del núcleo. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
 
 Ejemplo de uso en Python, desde la carpeta del proyecto:
 
@@ -322,13 +322,13 @@ Prueba: «Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y 
 
 La terminal anterior sigue disponible con `python3 -m src.main`. Streamlit es opcional para ese modo. `app.py` contiene únicamente la interfaz; el agente continúa en `src/agent.py`.
 
-Para ejecutar todas las pruebas, incluidas las siete pruebas de interfaz, sin necesitar Ollama:
+Para ejecutar todas las pruebas, incluidas las ocho pruebas de interfaz, sin necesitar Ollama:
 
 ~~~bash
 .venv/bin/python -B -m unittest discover -s tests
 ~~~
 
-Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas siete pruebas y siguen ejecutándose las 100 del agente, herramientas y presentación.
+Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas ocho pruebas y siguen ejecutándose las 105 del agente, herramientas y presentación.
 
 ### Preguntas repetidas
 
@@ -337,3 +337,7 @@ El historial del agente conserva todos los mensajes, también en la interfaz. Si
 Las preguntas de aclaración pueden mencionar «euros» sin incluir importes, destinos ni afirmaciones de precios. Si se bloquean dos respuestas consecutivas, faltan datos imprescindibles y todavía no hay una estimación exitosa en el turno, el programa pregunta directamente por lo pendiente en lugar de agotar las consultas. No acepta presupuestos inventados y no aplica este cierre a una comparación con costes ya comprobados. Cuatro pruebas del agente y una de interfaz reproducen este caso.
 
 Si modificas el código del agente mientras la interfaz está abierta, detén Streamlit con Ctrl+C y arráncalo de nuevo con el comando anterior para cargar el código actualizado. «Nueva conversación» reinicia el historial, pero no reinicia el servidor de Python.
+
+### Semanas y orígenes sin costes
+
+«Una semana» cuenta como duración indicada (7 días); el modelo utiliza días al llamar a las herramientas. Los orígenes disponibles se comprueban en las rutas del catálogo. Si escribes «desde León», el programa explica que solo dispone de transporte desde Madrid y pide un cambio explícito antes de continuar. No cambia León a Madrid por su cuenta ni inventa el coste del trayecto. Puedes confirmar «desde Madrid» para continuar la demostración conservando el resto de la conversación. La detección sencilla de origen reconoce «desde», «salimos de» y «salgo de» seguidos de una ciudad de una palabra; no es un reconocimiento general de direcciones. Cinco pruebas del agente y una de interfaz cubren semanas, origen no disponible, persistencia y cambio explícito.

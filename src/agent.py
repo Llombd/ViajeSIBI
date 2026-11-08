@@ -247,6 +247,21 @@ class AgenteViajes:
             raise ValueError("Escribe una petición no vacía.")
         inicio = len(self.historial)
         self.historial.append({"role": "user", "content": texto})
+        origen = self._origen_usuario()
+        origenes = {
+            _normalizar(ciudad)
+            for destino in _cargar_catalogo()["destinos"]
+            for ciudad in destino["costes"]["transporte_ida_vuelta_por_persona"]
+        }
+        if origen and _normalizar(origen) not in origenes:
+            return self._terminar(
+                f"Has indicado {origen} como origen. El catálogo actual solo permite estimar "
+                "el transporte desde Madrid, así que no puedo calcular el coste total desde "
+                f"{origen}. No cambiaré tu origen automáticamente. "
+                "¿Quieres usar Madrid para esta demostración? Si es así, indica «desde Madrid»; "
+                "si mantienes el origen actual, no disponemos de esos costes. "
+                "Conservo los demás datos del viaje."
+            )
         menciones = [mencion for mensaje in self.historial
                      if mensaje["role"] == "user" and not mensaje.get("interno")
                      for mencion in self._menciones_presupuesto(mensaje["content"])]
@@ -600,6 +615,23 @@ class AgenteViajes:
                 ajustados.pop("intereses", None)
         return ajustados
 
+    def _origen_usuario(self):
+        """Reconoce las formas de origen usadas en esta demostración.
+
+        Solo las ciudades de una palabra tienen datos en el catálogo actual.
+        No toma una ciudad mencionada por el modelo como origen confirmado.
+        """
+        origen = None
+        for mensaje in self.historial:
+            if mensaje["role"] == "user" and not mensaje.get("interno"):
+                coincidencias = re.findall(
+                    r"\b(?:desde|salimos\s+de|salgo\s+de)\s+([\wáéíóúüñ]+)",
+                    mensaje["content"], re.I,
+                )
+                if coincidencias:
+                    origen = coincidencias[-1]
+        return origen
+
     def _faltan_datos_imprescindibles(self):
         """Solo orienta las preguntas; los valores siguen interpretándose en el LLM."""
         texto = _normalizar(" ".join(m["content"] for m in self.historial
@@ -607,7 +639,7 @@ class AgenteViajes:
         numeros = r"(?:\d+|un|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)"
         mencionados = {
             "origen": re.search(r"\bdesde\s+\w+|\bsal(?:imos|go)\s+de\s+\w+", texto),
-            "duración": re.search(numeros + r"\s+dias?\b", texto),
+            "duración": re.search(numeros + r"\s+(?:dias?|semanas?)\b", texto),
             "viajeros": re.search(r"\bsomos\s+" + numeros + r"\b|" + numeros
                                   + r"\s+(?:personas?|viajeros?)\b|con otra persona", texto),
             "presupuesto": self._presupuesto_usuario() is not None,

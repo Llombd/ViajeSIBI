@@ -231,7 +231,7 @@ class TestAgente(unittest.TestCase):
             propuesta(["oporto"], origen="Bilbao"),
         ])
         agente = AgenteViajes(cliente, mostrar=lambda texto: None, max_consultas=2)
-        self.assertIn("límite", agente.responder("Consulta Oporto desde Bilbao."))
+        self.assertIn("límite", agente.responder("Consulta Oporto."))
 
     def test_viaje_barato_dos_turnos_sin_intereses_inventados(self):
         cliente = ClienteSimulado([
@@ -916,6 +916,50 @@ class TestAclaracionSinBucles(unittest.TestCase):
                 respuesta, error = agente._validar_respuesta({"role": "assistant", "content": texto})
                 self.assertIsNotNone(error)
                 self.assertIsNone(respuesta)
+
+
+class TestSemanasYOrigen(unittest.TestCase):
+    def test_semanas_son_duracion_conocida(self):
+        for duracion in ("una semana", "2 semanas", "dos semanas", "1 semana"):
+            with self.subTest(duracion=duracion):
+                agente = AgenteViajes(mostrar=lambda t: None)
+                agente.historial.append({"role": "user", "content": "Desde Madrid, " + duracion + ", 4 personas y 1000 EUR"})
+                self.assertEqual(agente._faltan_datos_imprescindibles(), [])
+
+    def test_leon_explica_limitacion_sin_modelo_ni_costes(self):
+        cliente = ClienteSimulado([])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        respuesta = agente.responder("desde León, una semana y unos 1000€")
+        self.assertIn("solo permite estimar el transporte desde Madrid", respuesta)
+        self.assertIn("desde León", respuesta)
+        self.assertEqual(cliente.peticiones, [])
+        self.assertEqual(agente._origen_usuario(), "León")
+        self.assertNotIn("duración", agente._faltan_datos_imprescindibles())
+
+    def test_leon_no_se_cambia_al_repetir_presupuesto(self):
+        agente = AgenteViajes(ClienteSimulado([]), mostrar=lambda t: None)
+        agente.responder("Desde leon, una semana y unos 1000")
+        respuesta = agente.responder("1000 EUR en total, somos 4 personas")
+        self.assertIn("desde leon", respuesta)
+        self.assertEqual(agente._origen_usuario(), "leon")
+        self.assertEqual(agente._presupuesto_usuario(), 1000)
+
+    def test_cambio_explicito_a_madrid_permita_continuar_con_siete_dias(self):
+        cliente = ClienteSimulado([coste("oporto", dias=7, viajeros=4), propuesta(["oporto"], dias=7, viajeros=4)])
+        agente = AgenteViajes(cliente, mostrar=lambda t: None)
+        agente.responder("Desde León, una semana, somos 4 personas y unos 1000€")
+        respuesta = agente.responder("De acuerdo, desde Madrid. Consulta el coste de Oporto.")
+        self.assertIn("7 días, 4 viajeros", respuesta)
+        self.assertIn("2500 EUR", respuesta)
+        self.assertEqual(agente._origen_usuario(), "Madrid")
+
+    def test_origen_interno_no_cambia_el_del_usuario(self):
+        agente = AgenteViajes(mostrar=lambda t: None)
+        agente.historial.extend([
+            {"role": "user", "content": "salimos de León"},
+            {"role": "user", "interno": True, "content": "desde Madrid"},
+        ])
+        self.assertEqual(agente._origen_usuario(), "León")
 
 
 if __name__ == "__main__":

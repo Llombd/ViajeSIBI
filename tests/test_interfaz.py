@@ -59,6 +59,16 @@ class TestInterfaz(unittest.TestCase):
         self.assertNotIn("límite", app.markdown[-1].value)
         self.assertEqual(len(cliente.peticiones), 4)
 
+    def test_leon_y_una_semana_no_pierden_datos(self):
+        app, cliente = self.abrir()
+        app.chat_input[0].set_value("Somos 4 personas. Desde leon, una semana y unos 1000€").run()
+        self.assertFalse(app.exception)
+        self.assertIn("solo permite estimar el transporte desde Madrid", app.markdown[-1].value)
+        agente = app.session_state["agente"]
+        self.assertEqual(agente._faltan_datos_imprescindibles(), [])
+        self.assertEqual(agente._origen_usuario(), "leon")
+        self.assertEqual(cliente.peticiones, [])
+
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])
         app.chat_input[0].set_value("Somos 2 personas, 4 días desde Madrid, cultura y 800 EUR en total. Recomienda un destino.").run()
