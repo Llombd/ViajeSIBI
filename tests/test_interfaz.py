@@ -75,7 +75,7 @@ class TestInterfaz(unittest.TestCase):
         app.chat_input[0].set_value("sí").run()
         self.assertFalse(app.exception)
         self.assertEqual(app.session_state["agente"]._origen_usuario(), "Madrid")
-        self.assertEqual(app.markdown[-1].value, "¿Cuántos días quieres viajar?")
+        self.assertIn("faltan: duración", app.markdown[-1].value)
 
     def test_tabla_verificada_y_herramientas_desplegables(self):
         app, _ = self.abrir([coste("oporto"), propuesta(["oporto"], "recomendacion", 800)])

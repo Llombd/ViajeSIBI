@@ -971,7 +971,8 @@ class TestConfirmarOrigen(unittest.TestCase):
                 agente.responder("Somos 4 personas y salimos desde León, 1000 EUR")
                 respuesta = agente.responder(confirmacion)
                 self.assertEqual(agente._origen_usuario(), "Madrid")
-                self.assertEqual(respuesta, "¿Cuántos días?")
+                self.assertIn("faltan: duración", respuesta)
+                self.assertEqual(cliente.peticiones, [])
                 self.assertEqual(agente.historial[-2]["content"], confirmacion)
 
     def test_no_y_si_aislado_no_cambian_el_origen(self):
@@ -987,7 +988,7 @@ class TestConfirmarOrigen(unittest.TestCase):
     def test_error_ollama_restaura_confirmacion_pendiente(self):
         cliente = ClienteSimulado([ErrorOllama("Sin conexión"), {"role": "assistant", "content": "¿Cuántos días?"}])
         agente = AgenteViajes(cliente, mostrar=lambda t: None)
-        agente.responder("Desde León")
+        agente.responder("Desde León, 7 días, 4 personas y 1000 EUR")
         with self.assertRaises(ErrorOllama):
             agente.responder("sí")
         agente.responder("sí")

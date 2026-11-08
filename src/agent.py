@@ -283,6 +283,14 @@ class AgenteViajes:
                 f"¿Te refieres a {menciones[-1][0]} EUR de presupuesto total para todos los viajeros? "
                 "Confirma el importe y la moneda, por ejemplo: «1400 EUR en total»."
             )
+        if mensaje_usuario.get("origen_confirmado"):
+            faltan = self._faltan_datos_imprescindibles()
+            if faltan:
+                return self._terminar(
+                    "De acuerdo, usaremos Madrid como origen. Para continuar, faltan: "
+                    + ", ".join(faltan) + ". ¿Puedes indicarlos? "
+                    "Conservo los demás datos del viaje."
+                )
         ejecuciones = 0
         objetivo = self._cantidad_solicitada()
         parcial = None
