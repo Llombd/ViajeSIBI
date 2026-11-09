@@ -28,6 +28,17 @@ class DatosViaje:
                 "INSERT OR IGNORE INTO lugares VALUES (:destino_id, :nombre, :url)", lugares,
             )
 
+    def prioridades_ofertas(self):
+        with closing(sqlite3.connect(self.ruta)) as conexion:
+            conexion.execute("CREATE TABLE IF NOT EXISTS prioridades_ofertas (id INTEGER PRIMARY KEY, datos TEXT)")
+            fila = conexion.execute("SELECT datos FROM prioridades_ofertas WHERE id = 1").fetchone()
+        return json.loads(fila[0]) if fila else {}
+
+    def guardar_prioridades_ofertas(self, prioridades):
+        with closing(sqlite3.connect(self.ruta)) as conexion, conexion:
+            conexion.execute("CREATE TABLE IF NOT EXISTS prioridades_ofertas (id INTEGER PRIMARY KEY, datos TEXT)")
+            conexion.execute("INSERT OR REPLACE INTO prioridades_ofertas VALUES (1, ?)", (json.dumps(prioridades),))
+
     def lugar(self, destino_id):
         with closing(sqlite3.connect(self.ruta)) as conexion:
             fila = conexion.execute(

@@ -44,11 +44,11 @@ Para demostrarlo en un perfil vacío, busca destinos del sur y revisa el orden d
 
 Las valoraciones son del perfil local de la instalación. Se almacenan en `.viajesibi.sqlite3`, excluida de Git. `VIAJESIBI_DB` permite usar otra base de datos. La app guarda las valoraciones explícitas, sin guardar las conversaciones en SQLite. El aprendizaje actual actualiza un perfil que guía las búsquedas y mantiene los pesos de Qwen3. Las capas de datos y preferencias aplican reglas deterministas y Qwen3 toma las decisiones de planificación.
 
-La evidencia real se limita a los lugares documentados. Los costes de la demostración siguen siendo simulados y la integración con ofertas reales queda pendiente. El siguiente experimento debe medir si el orden aprendido mejora las propuestas finales del planificador, además de comprobar que cambia la búsqueda.
+La evidencia real se limita a los lugares documentados. Los costes de esta demostración son simulados. La búsqueda de ofertas reales funciona en la aplicación principal. El siguiente experimento debe medir si el orden aprendido mejora las propuestas finales del planificador, además de comprobar que cambia la búsqueda.
 
 ## Demo de planificación colaborativa
 
-En la interfaz, abre «Probar coordinación y aprendizaje». La demo usa un catálogo de prueba para una persona y dos noches. Los importes y horarios son simulados. El panel compara el mismo coordinador con y sin memoria.
+Estos escenarios se conservan como pruebas automáticas en `tests/test_plan_colaborativo.py`. Usan costes y horarios simulados para una persona y dos noches y comprueban el coordinador con y sin memoria.
 
 - **Coordinación.** Elige Valencia y un límite de 200 €. Los agentes prueban Barcelona y descartan combinaciones que superan el límite. El plan viable de Zaragoza cuesta 158 €.
 - **Reparación.** Elige Valencia y 250 €. Simula la cancelación del transporte. El coordinador conserva el hotel y propone otro tren por un total de 250 €.

@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 130 pruebas con la interfaz instalada (117 del núcleo y 13 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** aplicación web local de planificación con Qwen3 y ofertas de SerpApi. El modo terminal conserva el catálogo simulado y funciona sin claves.
 
 ## Conceptos básicos
 
@@ -299,7 +299,7 @@ Ocho pruebas adicionales verifican la aclaración, la sustitución del presupues
 
 ## Interfaz local con Streamlit
 
-La pantalla principal se centra en el chat. Escribe tu consulta en el campo inferior para empezar. La guía de datos está en la pantalla principal. Puedes escribir directamente o abrir «Introducir los datos en un formulario» y pulsar «Enviar al chat». El formulario usa euros y permite indicar región e intereses de forma opcional. En la barra lateral puedes guardar la conversación, iniciar otra y reabrir una guardada con su contexto. Vuelve a guardarla para conservar los nuevos mensajes. Las conversaciones guardadas duran hasta que recargues o cierres la pestaña. Las respuestas separan el resumen del viaje de la tabla de costes y muestran las herramientas y validaciones en un desplegable. Reutiliza el agente sin cambiar sus decisiones, costes ni límites. El historial se conserva por sesión de navegador; no se guarda en disco y puede perderse al recargar la página. No se comparte el agente entre sesiones. Los detalles de herramientas se pueden abrir cuando termina cada respuesta.
+La pantalla principal permite planificar un viaje con ofertas reales. El agente propone destinos según tus preferencias y consulta vuelos y alojamientos para las fechas elegidas.
 
 Desde la carpeta del proyecto, prepara un entorno separado (solo la primera vez):
 
@@ -316,19 +316,17 @@ cd /Users/lucia/Documents/viajeSIBI
 .venv/bin/python -m streamlit run app.py --server.address 127.0.0.1 --browser.gatherUsageStats false
 ~~~
 
-Abre http://127.0.0.1:8501 en el navegador. Para detener la interfaz, pulsa Ctrl+C en la terminal que la inició. No necesitas claves ni cuentas. La aplicación escucha solo en tu Mac; las peticiones al modelo siguen dirigidas a Ollama local. El coste de los destinos es ficticio.
+Abre http://127.0.0.1:8501 en el navegador. La aplicación escucha solo en tu Mac. Necesitas Ollama y una clave de SerpApi para consultar ofertas.
 
-Prueba: «Somos dos personas, cuatro días desde Madrid, nos gusta la cultura y tenemos 1400 EUR en total. Recomienda hasta tres destinos». También puedes escribir «tenemos 1400» y confirmar la moneda en el siguiente mensaje. Si Ollama no responde, verás el error y podrás volver a enviar tu petición después de abrirlo. El botón «Nueva conversación» elimina el historial de esa sesión y empieza con otro agente.
+El catálogo simulado se conserva para las pruebas y para el modo terminal. Los apartados de preguntas repetidas y orígenes describen ese modo.
 
-La terminal anterior sigue disponible con `python3 -m src.main`. Streamlit es opcional para ese modo. `app.py` contiene únicamente la interfaz; el agente continúa en `src/agent.py`.
-
-Para ejecutar todas las pruebas, incluidas las trece pruebas de interfaz, sin necesitar Ollama:
+Para ejecutar todas las pruebas, sin necesitar Ollama ni SerpApi:
 
 ~~~bash
 .venv/bin/python -B -m unittest discover -s tests
 ~~~
 
-Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas trece pruebas y siguen ejecutándose las 117 del agente, herramientas y presentación.
+Las pruebas de interfaz usan respuestas simuladas de Qwen3 y SerpApi para comprobar los campos y el envío de búsquedas. Sin Streamlit se omiten las pruebas de interfaz.
 
 ### Preguntas repetidas
 
@@ -351,3 +349,46 @@ Si el agente acaba de preguntar por el origen, puedes responder solo «León» o
 También puedes responder al origen y al presupuesto juntos: si se han preguntado esos datos, «León 1000€» conserva ambos. Para reconocer la ciudad se aparta solo el importe con moneda; el mensaje original permanece en el historial. Un importe solo no establece un origen. Tres pruebas del agente y una de interfaz reproducen este caso.
 
 La [evaluación comparativa](evals/README.md) incluye un piloto contra el modelo directo, la arquitectura por capas y el procedimiento para demostrar cómo las valoraciones de SQLite cambian una búsqueda.
+
+
+## Ofertas reales de vuelo y alojamiento
+
+En la pantalla **Planificar viaje**, indica la ciudad de salida, adultos, presupuesto para vuelo y estancia y, si quieres, tus gustos.
+Puedes indicar fechas exactas, un intervalo flexible, un mes aproximado o elegir **Me da igual**.
+En ese último caso, el agente busca desde dentro de una semana hasta dentro de 60 días.
+Qwen3 selecciona hasta tres destinos de una lista y elige qué fechas consultar dentro del periodo.
+Puedes introducir la clave de SerpApi en el campo oculto de la interfaz. Se conserva en memoria
+durante la sesión. También puedes iniciar Streamlit con la variable local `SERPAPI_API_KEY`.
+Mantén la clave fuera del repositorio.
+
+La búsqueda consulta Google Flights y Google Hotels mediante SerpApi. Comprueba el tramo de
+regreso de hasta dos opciones de ida y combina sus precios con tarifas de estancia que incluyen
+los impuestos y cargos informados por el proveedor. Muestra la combinación más económica encontrada en cada destino dentro del
+presupuesto, ordenada por precio. La búsqueda inicial puede usar hasta doce consultas de SerpApi. Cada alternativa posterior puede usar hasta cuatro más. Comprueba los importes finales y la disponibilidad
+en el proveedor antes de reservar. Esta vista requiere Ollama con Qwen3 para elegir destinos.
+
+
+Tras cada búsqueda, **Qué aportó revisar alternativas** compara el primer destino que propuso
+Qwen3 con los resultados de seguir buscando. Indica si las alternativas permitieron encontrar
+un plan viable, ahorrar dinero o si la primera propuesta ya era la más económica.
+La comparación mide el efecto de ampliar la búsqueda en ese caso, con el mismo proveedor.
+
+
+Cuando ninguna combinación encaja, Qwen3 recibe los precios comprobados de vuelo y estancia
+antes de elegir otro destino. Se comprueban hasta tres combinaciones de destino y fechas sin repetir una consulta. Si todos los
+planes completos superan el presupuesto, la pantalla muestra hasta tres alternativas por coste,
+indica cuánto falta para cada una y permite ajustar el presupuesto o las fechas en el formulario.
+
+
+Si el origen es León y la búsqueda inicial no da un plan viable, se consultan alternativas
+desde Valladolid y Madrid, en ese orden. El traslado hasta otro aeropuerto queda fuera del
+precio. Si tampoco encajan, se prueban hasta dos reintentos dejando fuera un gusto cada vez,
+de la última a la primera preferencia separada por comas. Se conservan las fechas permitidas,
+los viajeros y el presupuesto original. Los resultados indican qué condición cambió.
+
+En el formulario puedes fijar el aeropuerto de salida, indicar gustos que deben
+seguir guiando la búsqueda y ajustar cuánto considerarías añadir por persona. El margen
+inicial es de 50 € por adulto, con un máximo de 100 € por grupo. Si una alternativa
+encaja en ese margen desde el origen solicitado, se muestra antes de cambiar de aeropuerto
+o flexibilizar gustos. El presupuesto original se conserva. Puedes recordar las prioridades
+en el perfil local de SQLite mediante la casilla del formulario.
