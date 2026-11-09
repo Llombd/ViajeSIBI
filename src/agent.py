@@ -148,10 +148,18 @@ class ClienteOllama:
             + json.dumps(HERRAMIENTAS, ensure_ascii=False)
             + "\nFormato de decisión:\n" + json.dumps(FORMATO_DECISION),
         }
+        contenido = self.consultar_json(mensajes_api, FORMATO_DECISION)
+        try:
+            decision = json.loads(contenido)
+        except ValueError as error:
+            raise ErrorOllama("El modelo no devolvió una decisión JSON válida.") from error
+        return self._interpretar_decision(decision)
+
+    def consultar_json(self, mensajes, formato):
         datos = {
             "model": self.modelo,
-            "messages": mensajes_api,
-            "format": FORMATO_DECISION,
+            "messages": mensajes,
+            "format": formato,
             "stream": False,
             "think": False,
             # Contexto moderado para el Mac de 8 GB; salida breve.
@@ -190,10 +198,9 @@ class ClienteOllama:
             raise ErrorOllama("Ollama no devolvió un mensaje de asistente válido.")
         if not isinstance(mensaje.get("content", ""), str):
             raise ErrorOllama("El contenido de Ollama no es texto.")
-        try:
-            decision = json.loads(mensaje.get("content", ""))
-        except ValueError as error:
-            raise ErrorOllama("El modelo no devolvió una decisión JSON válida.") from error
+        return mensaje.get("content", "")
+
+    def _interpretar_decision(self, decision):
         if (
             not isinstance(decision, dict)
             or set(decision) != {"herramienta", "argumentos", "respuesta"}
