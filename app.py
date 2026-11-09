@@ -5,6 +5,8 @@ from copy import deepcopy
 import streamlit as st
 
 from src.agent import AgenteViajes, ErrorOllama
+from src.datos_viaje import DatosViaje
+from src.tools import buscar_destinos
 
 
 def mostrar_cabecera():
@@ -70,7 +72,7 @@ def mostrar_mensaje(mensaje):
 def gestionar_conversaciones():
     estado = st.session_state
     if st.button("Nueva conversación", use_container_width=True):
-        estado.agente = AgenteViajes(mostrar=lambda texto: None)
+        estado.agente = AgenteViajes(mostrar=lambda texto: None, datos=estado.repositorio_viaje)
         estado.mensajes = []
         estado.conversacion_activa = None
         st.rerun()
@@ -131,11 +133,32 @@ def formulario_viaje():
     return None
 
 
+def mostrar_preferencias(datos):
+    with st.expander("Preferencias aprendidas"):
+        st.caption("Las valoraciones de este perfil local se guardan para ordenar futuras búsquedas.")
+        destinos = {d["id"]: d["nombre"] for d in buscar_destinos()["destinos"]}
+        destino = st.selectbox("Destino que quieres valorar", list(destinos), format_func=destinos.__getitem__)
+        izquierda, derecha = st.columns(2)
+        if izquierda.button("Me interesa"):
+            datos.valorar(destino, 1)
+        if derecha.button("Me interesa menos"):
+            datos.valorar(destino, -1)
+        votos = datos.valoraciones()
+        if votos:
+            for clave, voto in votos.items():
+                etiqueta = "Me interesa" if voto > 0 else "Me interesa menos"
+                st.write(f"{destinos.get(clave, clave)} · {etiqueta}")
+        else:
+            st.caption("Todavía no hay valoraciones.")
+
+
 def main():
     st.set_page_config(page_title="ViajeSIBI", page_icon="🧳", layout="wide")
     # Cada pestaña tiene su propio agente; nunca se comparte con otros usuarios.
+    if "repositorio_viaje" not in st.session_state:
+        st.session_state.repositorio_viaje = DatosViaje()
     if "agente" not in st.session_state:
-        st.session_state.agente = AgenteViajes(mostrar=lambda texto: None)
+        st.session_state.agente = AgenteViajes(mostrar=lambda texto: None, datos=st.session_state.repositorio_viaje)
         st.session_state.mensajes = []
     st.session_state.setdefault("conversaciones_guardadas", [])
     st.session_state.setdefault("conversacion_activa", None)
@@ -146,7 +169,8 @@ def main():
         gestionar_conversaciones()
 
     mostrar_cabecera()
-    st.caption("Demostración universitaria · 15 destinos · Datos ficticios del catálogo")
+    st.caption("Demostración universitaria · Costes ficticios · Patrimonio documentado en destinos seleccionados")
+    mostrar_preferencias(st.session_state.repositorio_viaje)
     with st.container(border=True):
         st.subheader("Qué indicar en tu consulta")
         st.markdown("**Ciudad de salida** · **Duración** · **Número de viajeros** · **Presupuesto total y moneda**")

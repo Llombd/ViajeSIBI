@@ -2,6 +2,7 @@
 
 import importlib.util
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
@@ -14,6 +15,13 @@ if importlib.util.find_spec("streamlit"):
 
 @unittest.skipUnless(importlib.util.find_spec("streamlit"), "Instala la dependencia opcional interfaz.")
 class TestInterfaz(unittest.TestCase):
+    def setUp(self):
+        temporal = TemporaryDirectory()
+        self.addCleanup(temporal.cleanup)
+        entorno = patch.dict("os.environ", {"VIAJESIBI_DB": str(Path(temporal.name) / "viajes.sqlite3")})
+        entorno.start()
+        self.addCleanup(entorno.stop)
+
     def abrir(self, respuestas=()):
         cliente = ClienteSimulado(respuestas)
         with patch("src.agent.AgenteViajes", side_effect=lambda **kwargs: AgenteViajes(cliente, **kwargs)):

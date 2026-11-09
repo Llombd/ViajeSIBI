@@ -2,11 +2,14 @@
 
 import copy
 import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch, MagicMock
 from urllib.error import URLError
 
 from src.agent import AgenteViajes, ClienteOllama, ErrorOllama, ejecutar_herramienta
+from src.datos_viaje import DatosViaje
 
 
 def llamada(nombre, argumentos):
@@ -42,6 +45,29 @@ class ClienteSimulado:
 
 
 class TestAgente(unittest.TestCase):
+    def test_valoracion_persistente_reordena_busqueda_y_aporta_fuente(self):
+        with TemporaryDirectory() as temporal:
+            ruta = Path(temporal) / "viajes.sqlite3"
+            ordenes = []
+            for voto in (None, 1):
+                datos = DatosViaje(ruta)
+                if voto:
+                    datos.valorar("oporto", voto)
+                cliente = ClienteSimulado([
+                    llamada("buscar_destinos", {"region": "sur"}),
+                    coste("oporto"),
+                    propuesta(["oporto"], "recomendacion", 800),
+                ])
+                agente = AgenteViajes(cliente, mostrar=lambda texto: None, datos=DatosViaje(ruta))
+                respuesta = agente.responder("Busco un destino en el sur para 2 personas desde Madrid, 4 días y 800 EUR.")
+                resultado = json.loads(cliente.peticiones[1][-1]["content"])
+                self.assertTrue(all(d["region"] == "sur" for d in resultado["destinos"]))
+                ordenes.append([d["id"] for d in resultado["destinos"]])
+                self.assertIn("https://whc.unesco.org/en/list/755/", respuesta)
+                self.assertIn("770 EUR", respuesta)
+            self.assertEqual([orden[0] for orden in ordenes], ["lisboa", "oporto"])
+            self.assertCountEqual(*ordenes)
+
     def test_consultas_sucesivas_y_resultados(self):
         cliente = ClienteSimulado([
             llamada("consultar_destino", {"destino_id": "lisboa", "mes": 5}),

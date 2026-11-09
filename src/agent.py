@@ -10,6 +10,7 @@ from urllib.request import Request, urlopen
 
 from src.prompts import INSTRUCCIONES
 from src.presentacion import presentar_opciones
+from src.datos_viaje import AgenteDatos, AgentePreferencias
 from src.tools import (buscar_destinos, consultar_destino, estimar_coste,
                        _cargar_catalogo, _normalizar)
 
@@ -232,13 +233,17 @@ def ejecutar_herramienta(nombre, argumentos):
 
 
 class AgenteViajes:
-    def __init__(self, cliente=None, mostrar=print, max_consultas=12, max_herramientas=10):
+    def __init__(self, cliente=None, mostrar=print, max_consultas=12, max_herramientas=10, datos=None):
         if type(max_consultas) is not int or max_consultas < 1:
             raise ValueError("max_consultas debe ser un entero positivo.")
         if type(max_herramientas) is not int or max_herramientas < 1:
             raise ValueError("max_herramientas debe ser un entero positivo.")
         self.cliente = cliente if cliente is not None else ClienteOllama()
         self.mostrar = mostrar
+        self.agente_datos = AgenteDatos(datos) if datos is not None else None
+        self.agente_preferencias = (
+            AgentePreferencias(datos, _cargar_catalogo()["destinos"]) if datos is not None else None
+        )
         self.max_consultas = max_consultas
         self.max_herramientas = max_herramientas
         self._origen_pendiente = None
@@ -399,6 +404,16 @@ class AgenteViajes:
                         resultado = self._coste_descartado(argumentos) if nombre == "estimar_coste" else None
                         if resultado is None:
                             resultado = ejecutar_herramienta(nombre, argumentos)
+                        if self.agente_datos and "error" not in resultado:
+                            if nombre == "buscar_destinos":
+                                candidatos, perfil = self.agente_preferencias.priorizar(resultado["destinos"])
+                                if perfil:
+                                    resultado["perfil_aprendido"] = perfil
+                                    self.mostrar("[Agente de preferencias] Orden de candidatos: "
+                                                 + ", ".join(d["nombre"] for d in candidatos))
+                                resultado["destinos"] = [self.agente_datos.enriquecer(d) for d in candidatos]
+                            elif nombre == "consultar_destino":
+                                resultado = self.agente_datos.enriquecer(resultado)
                         if nombre == "buscar_destinos" and resultado.get("destinos") == []:
                             resultado["aviso"] = (
                                 "Sin coincidencias para estos filtros, no significa que no haya destinos. "
@@ -803,9 +818,16 @@ class AgenteViajes:
                               "o explica la limitación.")
             opciones.append((catalogo[destino_id], dato))
 
-        return presentar_opciones(
+        respuesta = presentar_opciones(
             opciones, presupuesto, self._intereses_usuario(), propuesta["tipo"]
-        ), None
+        )
+        if self.agente_datos and propuesta["tipo"] == "recomendacion":
+            lugares = [self.agente_datos.datos.lugar(destino["id"]) for destino, _ in opciones]
+            enlaces = [f"- [{lugar['nombre']}]({lugar['url']}) · {lugar['fuente']}"
+                       for lugar in lugares if lugar]
+            if enlaces:
+                respuesta += "\n\nLugares documentados:\n" + "\n".join(enlaces)
+        return respuesta, None
 
     @staticmethod
     def _menciones_presupuesto(texto):

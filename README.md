@@ -2,7 +2,7 @@
 
 Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
 
-**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 129 pruebas con la interfaz instalada (116 del núcleo y 13 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
+**Estado:** etapas 1, 2 y 3 implementadas. Agente por terminal e interfaz local opcional con Ollama local y qwen3:4b. Pasan 130 pruebas con la interfaz instalada (117 del núcleo y 13 de interfaz), incluidas las 11 originales. No se utilizan claves ni APIs de pago.
 
 ## Conceptos básicos
 
@@ -157,7 +157,7 @@ cd /Users/lucia/Documents/viajeSIBI
 python3 -m unittest discover -s tests -v
 ~~~
 
-Hay 116 pruebas del núcleo. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
+Hay 117 pruebas del núcleo. Se conservan las 11 originales de herramientas y las pruebas del bucle adaptadas al formato de salida verificado. Las regresiones reproducen el caso de Bruselas, presupuestos copiados como precios, precios de otros destinos, parámetros distintos, resultados fallidos, propuestas por encima del presupuesto, bloqueo al agotar límites y filtros regionales inventados. También comprueban que el modelo puede seguir consultando y recomendar una alternativa verificada. Las nueve regresiones adicionales cubren el viaje barato de dos turnos, intereses inventados o excluidos, persistencia de preferencias, indiferencia regional, búsquedas vacías y prioridad de datos esenciales. Las 14 regresiones de recomendaciones múltiples comprueban cierre prematuro, cantidades solicitadas, costes reutilizados, menos opciones válidas, límites, duplicados y filtros. Las 14 pruebas de presentación comprueban resumen, orden, columnas, márgenes, opciones únicas, intereses, presupuestos ausentes o inventados, fuentes verificadas y continuidad del contexto. Las 13 regresiones de cierre cubren presupuestos insuficientes, descartes, límites, respuestas parciales y cambios de parámetros. Todas pasan sin Ollama; no son una evaluación exhaustiva de la calidad lingüística del modelo.
 
 Ejemplo de uso en Python, desde la carpeta del proyecto:
 
@@ -328,7 +328,7 @@ Para ejecutar todas las pruebas, incluidas las trece pruebas de interfaz, sin ne
 .venv/bin/python -B -m unittest discover -s tests
 ~~~
 
-Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas trece pruebas y siguen ejecutándose las 116 del agente, herramientas y presentación.
+Las pruebas de interfaz utilizan el simulador oficial de Streamlit y decisiones simuladas del modelo: comprueban inicio, memoria, tabla y trazas, errores recuperables y nueva conversación. Sin Streamlit se omiten esas trece pruebas y siguen ejecutándose las 117 del agente, herramientas y presentación.
 
 ### Preguntas repetidas
 
@@ -349,3 +349,5 @@ Tras confirmar Madrid con una respuesta breve, si aún faltan datos esenciales, 
 Si el agente acaba de preguntar por el origen, puedes responder solo «León» o «Madrid». Esa respuesta se conserva como origen indicado por el usuario, sin exigir el prefijo «desde». La detección actual reconoce ciudades de una palabra y no convierte saludos o negativas en ciudades. Fuera de una pregunta sobre origen, una palabra suelta no establece ese dato. Cuatro pruebas del agente y una de interfaz cubren las respuestas cortas y la conservación de semanas, viajeros y presupuesto.
 
 También puedes responder al origen y al presupuesto juntos: si se han preguntado esos datos, «León 1000€» conserva ambos. Para reconocer la ciudad se aparta solo el importe con moneda; el mensaje original permanece en el historial. Un importe solo no establece un origen. Tres pruebas del agente y una de interfaz reproducen este caso.
+
+La [evaluación comparativa](evals/README.md) incluye un piloto contra el modelo directo, la arquitectura por capas y el procedimiento para demostrar cómo las valoraciones de SQLite cambian una búsqueda.
