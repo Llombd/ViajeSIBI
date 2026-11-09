@@ -45,3 +45,13 @@ Para demostrarlo en un perfil vacío, busca destinos del sur y revisa el orden d
 Las valoraciones son del perfil local de la instalación. Se almacenan en `.viajesibi.sqlite3`, excluida de Git. `VIAJESIBI_DB` permite usar otra base de datos. La app guarda las valoraciones explícitas, sin guardar las conversaciones en SQLite. El aprendizaje actual actualiza un perfil que guía las búsquedas y mantiene los pesos de Qwen3. Las capas de datos y preferencias aplican reglas deterministas y Qwen3 toma las decisiones de planificación.
 
 La evidencia real se limita a los lugares documentados. Los costes de la demostración siguen siendo simulados y la integración con ofertas reales queda pendiente. El siguiente experimento debe medir si el orden aprendido mejora las propuestas finales del planificador, además de comprobar que cambia la búsqueda.
+
+## Demo de planificación colaborativa
+
+En la interfaz, abre «Probar coordinación y aprendizaje». La demo usa un catálogo de prueba para una persona y dos noches. Los importes y horarios son simulados. El panel compara el mismo coordinador con y sin memoria.
+
+- **Coordinación.** Elige Valencia y un límite de 200 €. Los agentes prueban Barcelona y descartan combinaciones que superan el límite. El plan viable de Zaragoza cuesta 158 €.
+- **Reparación.** Elige Valencia y 250 €. Simula la cancelación del transporte. El coordinador conserva el hotel y propone otro tren por un total de 250 €.
+- **Aprendizaje.** Con un perfil de demo vacío, guarda una corrección de cocina y una de llegada temprana. Abre otra comparación y repite la corrección de llegada. Con Sevilla y 185 €, el peso adicional puede cambiar la decisión final: a igualdad de señales se elige autobús y cocina por 183 €, mientras que dos señales de llegada frente a una de cocina priorizan tren y hotel por 184 €. Una excepción para este viaje permite llegar tarde sin cambiar el perfil guardado.
+
+Las capas de esta demo deciden mediante reglas explícitas. El planificador del chat usa Qwen3. Las pruebas cubren el rechazo por presupuesto, la reparación y la transferencia de preferencias. La comparación con memoria desactivada mide el efecto de la personalización. Para afirmar una mejora frente a Gemini haría falta repetir el mismo ejercicio con el mismo catálogo y correcciones en ambos sistemas.

@@ -155,7 +155,7 @@ class TestInterfaz(unittest.TestCase):
         self.assertTrue(app.warning)
         self.assertEqual(cliente.peticiones, [])
         app.text_input[0].set_value("Madrid")
-        app.number_input[2].set_value(800.50)
+        next(campo for campo in app.number_input if campo.label == "Presupuesto total en euros").set_value(800.50)
         app.text_input[2].set_value("cultura")
         enviar()
         self.assertFalse(app.exception)

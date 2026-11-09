@@ -1,11 +1,13 @@
 """Interfaz local: python3 -m streamlit run app.py --server.address 127.0.0.1."""
 
 from copy import deepcopy
+from uuid import uuid4
 
 import streamlit as st
 
 from src.agent import AgenteViajes, ErrorOllama
 from src.datos_viaje import DatosViaje
+from src.plan_colaborativo import AgentePreferenciasViaje, PREFERENCIAS, RUTAS, coordinar
 from src.tools import buscar_destinos
 
 
@@ -65,8 +67,20 @@ def mostrar_mensaje(mensaje):
             else:
                 st.markdown(contenido)
         if mensaje.get("trazas"):
+            trazas = mensaje["trazas"]
+            consultas = [linea for linea in trazas if linea.startswith("[Herramienta]")]
+            busquedas = sum(linea.startswith("[Herramienta] buscar_destinos(") for linea in consultas)
+            costes = sum(linea.startswith("[Herramienta] estimar_coste(") for linea in consultas)
+            orden = next((linea.split(": ", 1)[1] for linea in reversed(trazas)
+                          if linea.startswith("[Agente de preferencias] Orden de candidatos: ")), None)
+            st.caption("**Cómo se preparó la respuesta**")
+            st.caption(f"El planificador solicitó {busquedas} búsquedas de destinos y "
+                       f"{costes} cálculos de coste simulado.")
+            if orden:
+                st.caption("Primeros candidatos tras aplicar tus valoraciones · "
+                           + ", ".join(orden.split(", ")[:3]))
             with st.expander("Herramientas y validaciones"):
-                st.code("\n\n".join(mensaje["trazas"]), language=None)
+                st.code("\n\n".join(trazas), language=None)
 
 
 def gestionar_conversaciones():
@@ -152,6 +166,57 @@ def mostrar_preferencias(datos):
             st.caption("Todavía no hay valoraciones.")
 
 
+def demostrar_coordinacion(datos):
+    st.subheader("Demostración de agentes")
+    st.caption("Escenario simulado para una persona y dos noches. Las ofertas, los horarios y los importes son datos de prueba.")
+    memoria = AgentePreferenciasViaje(datos.ruta)
+    perfil = memoria.perfil()
+    if perfil:
+        st.write("Preferencias guardadas", {
+            PREFERENCIAS[clave]: cantidad for clave, cantidad in perfil.items()
+        })
+    with st.form("demo_coordinacion"):
+        origen = st.selectbox("Ciudad de salida de la demo", list(RUTAS))
+        presupuesto = st.number_input("Límite para transporte y alojamiento (€)", min_value=1, value=250)
+        permitir_tarde = st.checkbox("En este viaje sí puedo llegar después de las 22:00")
+        ejecutar = st.form_submit_button("Comparar plan sin memoria y plan personalizado")
+    estado = st.session_state
+    if ejecutar:
+        inicial, _ = coordinar(origen, presupuesto, {}, permitir_tarde)
+        plan, pasos = coordinar(origen, presupuesto, perfil, permitir_tarde)
+        estado.demo_plan = {
+            "id": uuid4().hex, "origen": origen, "presupuesto": presupuesto,
+            "permitir_tarde": permitir_tarde, "perfil": perfil, "inicial": inicial,
+            "plan": plan, "pasos": pasos, "reparado": False,
+        }
+    if "demo_plan" not in estado:
+        return
+    demo = estado.demo_plan
+    plan = demo["plan"]
+    if plan and not demo["reparado"] and st.button("Simular cancelación del transporte"):
+        plan, pasos = coordinar(demo["origen"], demo["presupuesto"], demo["perfil"],
+                                demo["permitir_tarde"], cancelado=plan)
+        demo.update(plan=plan, pasos=pasos, reparado=True)
+    columnas = st.columns(2)
+    for columna, titulo, opcion in zip(columnas, ("Sin memoria", "Con memoria"), (demo["inicial"], plan)):
+        with columna:
+            st.markdown(f"**{titulo}**")
+            if opcion:
+                st.write(f"{opcion.ciudad} · {opcion.total} €")
+                st.write(f"{opcion.transporte.nombre} · llegada a las {opcion.transporte.llegada:02d}:00")
+                st.write(opcion.alojamiento.nombre)
+            else:
+                st.write("Sin combinación dentro del presupuesto.")
+    if plan:
+        for clave, etiqueta in PREFERENCIAS.items():
+            if st.button(etiqueta, key=f"correccion_{clave}"):
+                memoria.aprender(demo["id"], clave)
+                st.success("Corrección guardada. Vuelve a comparar para ver su efecto.")
+    st.markdown("**Decisiones de los agentes**")
+    for paso in demo["pasos"]:
+        st.text(paso)
+
+
 def main():
     st.set_page_config(page_title="ViajeSIBI", page_icon="🧳", layout="wide")
     # Cada pestaña tiene su propio agente; nunca se comparte con otros usuarios.
@@ -169,7 +234,13 @@ def main():
         gestionar_conversaciones()
 
     mostrar_cabecera()
-    st.caption("Demostración universitaria · Costes ficticios · Patrimonio documentado en destinos seleccionados")
+    with st.expander("Probar coordinación y aprendizaje", expanded=True):
+        demostrar_coordinacion(st.session_state.repositorio_viaje)
+    st.info("ViajeSIBI propone destinos y calcula costes simulados. Para ver ofertas y disponibilidad, abre un buscador externo.")
+    vuelos, trenes, alojamientos = st.columns(3)
+    vuelos.link_button("Buscar vuelos", "https://www.google.com/travel/flights?hl=es")
+    trenes.link_button("Buscar trenes", "https://www.renfe.com/es/es")
+    alojamientos.link_button("Buscar alojamiento", "https://www.booking.com/index.es.html")
     mostrar_preferencias(st.session_state.repositorio_viaje)
     with st.container(border=True):
         st.subheader("Qué indicar en tu consulta")
