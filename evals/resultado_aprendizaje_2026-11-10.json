@@ -1,0 +1,109 @@
+{
+  "id": "c2a61ef7a54c4ca2840b46f32f2b2354",
+  "contexto": "{\"adultos\": 2, \"fuente\": \"ficticio-v1\", \"gustos\": [\"cultura\"], \"noches\": 3, \"nota\": 0, \"origen\": \"VLC\", \"tipos\": null}",
+  "fuente": "ficticio-v1",
+  "fecha_utc": "2026-11-10T08:45:48.528421+00:00",
+  "modelo": "qwen3:4b",
+  "propuesta": {
+    "estrategia": "mantener",
+    "evidencias": [],
+    "hipotesis": "No hay experiencia repetida suficiente."
+  },
+  "experiencia": [],
+  "validacion": [],
+  "limites": {
+    "intentos_por_caso": 3,
+    "objetivo_opciones": 1,
+    "presupuesto": 500
+  },
+  "codigo_sha256": {
+    "mejora_agente.py": "5de2f602566761e116d599c109fb71720f0ea724e880612c759161ce3ca28e44",
+    "seleccion_viaje.py": "666e999b6a4cf400e177ad633e07d7845a484e06dc84cbd6b6c67b0b4b3661f8",
+    "demo_ofertas.py": "ae2d24f9ba9119d211f162a394e09c1e0120d93ab6b10a144257acc5bc4af836"
+  },
+  "adoptada": false,
+  "motivo_validacion": "Faltan al menos dos fechas distintas de validación.",
+  "practica": [
+    {
+      "ida": "2027-02-01",
+      "vuelta": "2027-02-04",
+      "viaje_encontrado": false,
+      "total": null,
+      "consultas": 0,
+      "llamadas_modelo": 1,
+      "segundos": 21.93,
+      "error": "El agente no devolvió destinos o fechas utilizables. Prueba de nuevo.",
+      "revisiones_invalidas": 0,
+      "observaciones": [],
+      "traza": [],
+      "memoria_usada": []
+    },
+    {
+      "ida": "2027-02-08",
+      "vuelta": "2027-02-11",
+      "viaje_encontrado": true,
+      "total": 480,
+      "consultas": 8,
+      "llamadas_modelo": 2,
+      "segundos": 12.37,
+      "error": null,
+      "revisiones_invalidas": 0,
+      "observaciones": [
+        {
+          "aeropuerto": "MAD",
+          "ida": "2027-02-08",
+          "vuelta": "2027-02-11",
+          "diagnostico": {
+            "estado": "con_ofertas",
+            "vuelos": 4,
+            "alojamientos": 39,
+            "vuelo_minimo": 268,
+            "alojamiento_minimo": 330
+          },
+          "consultas_proveedor": 4,
+          "impuestos_confirmados": true,
+          "vuelo": 268,
+          "alojamiento": 330,
+          "total": 598,
+          "siguiente_decision": "Mantener la lista pendiente"
+        },
+        {
+          "aeropuerto": "BCN",
+          "ida": "2027-02-08",
+          "vuelta": "2027-02-11",
+          "diagnostico": {
+            "estado": "con_ofertas",
+            "vuelos": 4,
+            "alojamientos": 39,
+            "vuelo_minimo": 270,
+            "alojamiento_minimo": 210
+          },
+          "consultas_proveedor": 4,
+          "impuestos_confirmados": true,
+          "vuelo": 270,
+          "alojamiento": 210,
+          "total": 480,
+          "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+        }
+      ],
+      "traza": [
+        "Consulta elegida por Qwen3: Madrid · 08/02 a 11/02.",
+        "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+        "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+        "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+        "Mejor combinación comprobada: 268.00 € de vuelo + 330.00 € de estancia = 598.00 €.",
+        "Diagnóstico comprobado: El total publicado supera el presupuesto en 98.00 €. El componente de mayor coste es alojamiento.",
+        "Objetivo elegido por Qwen3 (no garantiza el resultado): Buscar otra opción para comparar el coste de alojamiento.",
+        "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+        "Consulta elegida por Qwen3: Barcelona · 08/02 a 11/02.",
+        "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+        "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+        "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+        "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+        "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+        "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+      ],
+      "memoria_usada": []
+    }
+  ]
+}

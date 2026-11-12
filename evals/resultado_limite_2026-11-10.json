@@ -1,0 +1,180 @@
+{
+  "fecha_utc": "2026-11-10T08:29:27.828728+00:00",
+  "modelo": "qwen3:4b",
+  "datos": "ficticios",
+  "casos": [
+    {
+      "origen": "MAD",
+      "presupuesto": 200,
+      "gustos": "cultura",
+      "resultado": "Sin datos suficientes",
+      "segundos": 23.810712458987837,
+      "estrategias": [
+        [
+          "Lista fija",
+          [
+            {
+              "aeropuerto": "VLC",
+              "ida": "2027-02-01",
+              "vuelta": "2027-02-04",
+              "diagnostico": {
+                "estado": "vuelo_supera_maximo",
+                "vuelos": 4,
+                "alojamientos": 0,
+                "vuelo_minimo": 268,
+                "limite_total": 200,
+                "consultas_hotel_evitadas": 1
+              },
+              "consultas_proveedor": 3,
+              "estado": "Sin combinación comprobada"
+            },
+            {
+              "aeropuerto": "SVQ",
+              "ida": "2027-02-01",
+              "vuelta": "2027-02-04",
+              "diagnostico": {
+                "estado": "vuelo_supera_maximo",
+                "vuelos": 4,
+                "alojamientos": 0,
+                "vuelo_minimo": 310,
+                "limite_total": 200,
+                "consultas_hotel_evitadas": 1
+              },
+              "consultas_proveedor": 3,
+              "estado": "Sin combinación comprobada"
+            },
+            {
+              "aeropuerto": "BIO",
+              "ida": "2027-02-01",
+              "vuelta": "2027-02-04",
+              "diagnostico": {
+                "estado": "vuelo_supera_maximo",
+                "vuelos": 4,
+                "alojamientos": 0,
+                "vuelo_minimo": 246,
+                "limite_total": 200,
+                "consultas_hotel_evitadas": 1
+              },
+              "consultas_proveedor": 3,
+              "estado": "Sin combinación comprobada"
+            }
+          ],
+          [],
+          [
+            "Consulta de la lista inicial: Valencia · 01/02 a 04/02.",
+            "Los vuelos comprobados cuestan al menos 268.00 €, más que el máximo de 200.00 €. Python evita consultar el hotel; estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar.",
+            "Diagnóstico comprobado: Solo el vuelo comprobado cuesta desde 268.00 €, por encima del máximo de 200.00 €. No se consultó hotel: estas combinaciones no encajan. Otras opciones no están descartadas.",
+            "Consulta de la lista inicial: Sevilla · 01/02 a 04/02.",
+            "Los vuelos comprobados cuestan al menos 310.00 €, más que el máximo de 200.00 €. Python evita consultar el hotel; estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar.",
+            "Diagnóstico comprobado: Solo el vuelo comprobado cuesta desde 310.00 €, por encima del máximo de 200.00 €. No se consultó hotel: estas combinaciones no encajan. Otras opciones no están descartadas.",
+            "Consulta de la lista inicial: Bilbao · 01/02 a 04/02.",
+            "Los vuelos comprobados cuestan al menos 246.00 €, más que el máximo de 200.00 €. Python evita consultar el hotel; estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar.",
+            "Diagnóstico comprobado: Solo el vuelo comprobado cuesta desde 246.00 €, por encima del máximo de 200.00 €. No se consultó hotel: estas combinaciones no encajan. Otras opciones no están descartadas.",
+            "Las consultas realizadas no dieron un plan confirmado dentro del presupuesto. El límite no permite concluir que no exista en otros destinos o fechas."
+          ]
+        ],
+        [
+          "Agente adaptativo",
+          [
+            {
+              "aeropuerto": "VLC",
+              "ida": "2027-02-01",
+              "vuelta": "2027-02-04",
+              "diagnostico": {
+                "estado": "vuelo_supera_maximo",
+                "vuelos": 4,
+                "alojamientos": 0,
+                "vuelo_minimo": 268,
+                "limite_total": 200,
+                "consultas_hotel_evitadas": 1
+              },
+              "consultas_proveedor": 3,
+              "estado": "Sin combinación comprobada",
+              "siguiente_decision": "Mantener la lista pendiente"
+            },
+            {
+              "aeropuerto": "SVQ",
+              "ida": "2027-02-01",
+              "vuelta": "2027-02-04",
+              "diagnostico": {
+                "estado": "vuelo_supera_maximo",
+                "vuelos": 4,
+                "alojamientos": 0,
+                "vuelo_minimo": 310,
+                "limite_total": 200,
+                "consultas_hotel_evitadas": 1
+              },
+              "consultas_proveedor": 3,
+              "estado": "Sin combinación comprobada",
+              "siguiente_decision": "Mantener la lista pendiente"
+            },
+            {
+              "aeropuerto": "BIO",
+              "ida": "2027-02-01",
+              "vuelta": "2027-02-04",
+              "diagnostico": {
+                "estado": "vuelo_supera_maximo",
+                "vuelos": 4,
+                "alojamientos": 0,
+                "vuelo_minimo": 246,
+                "limite_total": 200,
+                "consultas_hotel_evitadas": 1
+              },
+              "consultas_proveedor": 3,
+              "estado": "Sin combinación comprobada"
+            }
+          ],
+          [],
+          [
+            "Consulta elegida por Qwen3: Valencia · 01/02 a 04/02.",
+            "Los vuelos comprobados cuestan al menos 268.00 €, más que el máximo de 200.00 €. Python evita consultar el hotel; estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar.",
+            "Diagnóstico comprobado: Solo el vuelo comprobado cuesta desde 268.00 €, por encima del máximo de 200.00 €. No se consultó hotel: estas combinaciones no encajan. Otras opciones no están descartadas.",
+            "Objetivo elegido por Qwen3 (no garantiza el resultado): Buscar otra opción para comparar el coste de alojamiento.",
+            "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+            "Consulta elegida por Qwen3: Sevilla · 01/02 a 04/02.",
+            "Los vuelos comprobados cuestan al menos 310.00 €, más que el máximo de 200.00 €. Python evita consultar el hotel; estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar.",
+            "Diagnóstico comprobado: Solo el vuelo comprobado cuesta desde 310.00 €, por encima del máximo de 200.00 €. No se consultó hotel: estas combinaciones no encajan. Otras opciones no están descartadas.",
+            "Objetivo elegido por Qwen3 (no garantiza el resultado): Buscar otra opción para comparar el coste de alojamiento.",
+            "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+            "Consulta elegida por Qwen3: Bilbao · 01/02 a 04/02.",
+            "Los vuelos comprobados cuestan al menos 246.00 €, más que el máximo de 200.00 €. Python evita consultar el hotel; estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar.",
+            "Diagnóstico comprobado: Solo el vuelo comprobado cuesta desde 246.00 €, por encima del máximo de 200.00 €. No se consultó hotel: estas combinaciones no encajan. Otras opciones no están descartadas.",
+            "Las consultas realizadas no dieron un plan confirmado dentro del presupuesto. El límite no permite concluir que no exista en otros destinos o fechas."
+          ]
+        ]
+      ],
+      "balance_economico": {
+        "titulo": "Ninguno consiguió un viaje con total confirmado dentro del presupuesto.",
+        "categoria": "Ninguno consiguió un viaje confirmado",
+        "ahorro": null,
+        "metodos": [
+          {
+            "metodo": "Lista fija",
+            "total": null,
+            "viable": false,
+            "consultas": 9,
+            "hoteles_evitados": 3,
+            "cambios": 0
+          },
+          {
+            "metodo": "Agente adaptativo",
+            "total": null,
+            "viable": false,
+            "consultas": 9,
+            "hoteles_evitados": 3,
+            "cambios": 0
+          }
+        ]
+      }
+    }
+  ],
+  "codigo_sha256": {
+    "src/seleccion_viaje.py": "ff9fb382a7d35a00a19a6b7ba179da84dedf7682aacaef4db2650b4bafa31e0e",
+    "src/ofertas_reales.py": "8d35fc13b1d017a0e736414fb7d86deaaa2217ed7ad4dbe95903bfd70dc59857",
+    "src/demo_ofertas.py": "ae2d24f9ba9119d211f162a394e09c1e0120d93ab6b10a144257acc5bc4af836"
+  },
+  "protocolo": "Comprobación de límite",
+  "balance": {
+    "Sin datos suficientes": 1
+  }
+}

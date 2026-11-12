@@ -55,3 +55,202 @@ Estos escenarios se conservan como pruebas automáticas en `tests/test_plan_cola
 - **Aprendizaje.** Con un perfil de demo vacío, guarda una corrección de cocina y una de llegada temprana. Abre otra comparación y repite la corrección de llegada. Con Sevilla y 185 €, el peso adicional puede cambiar la decisión final: a igualdad de señales se elige autobús y cocina por 183 €, mientras que dos señales de llegada frente a una de cocina priorizan tren y hotel por 184 €. Una excepción para este viaje permite llegar tarde sin cambiar el perfil guardado.
 
 Las capas de esta demo deciden mediante reglas explícitas. El planificador del chat usa Qwen3. Las pruebas cubren el rechazo por presupuesto, la reparación y la transferencia de preferencias. La comparación con memoria desactivada mide el efecto de la personalización. Para afirmar una mejora frente a Gemini haría falta repetir el mismo ejercicio con el mismo catálogo y correcciones en ambos sistemas.
+
+## Búsqueda fija frente a búsqueda adaptativa
+
+La prueba `test_comparacion_controlada_con_mismo_numero_de_consultas` simula un conjunto
+de ofertas y da a ambos métodos dos consultas. Con 800 € de presupuesto, la lista fija
+comprueba dos destinos cuyos mejores totales son 900 € y 850 €. La búsqueda adaptativa
+usa el primer resultado para elegir otro destino y encuentra un plan de 650 €.
+Es una comprobación controlada del mecanismo, con ofertas y decisión simuladas.
+Todavía falta medir el resultado con el modelo y las ofertas reales en varios viajes.
+
+### Piloto con Qwen3 y ofertas ficticias
+
+Desde la raíz del proyecto, con Ollama activo:
+
+~~~bash
+.venv/bin/python -B -m evals.evaluar_replanteamiento
+~~~
+
+En una ejecución se compararon seis viajes de tres noches para dos adultos, con tres
+intentos por método en cada caso. Ambos métodos compartieron la propuesta inicial y el
+catálogo. El agente ganó un caso, empató tres y perdió dos.
+
+| Salida | Presupuesto del grupo | Lista fija | Agente adaptativo |
+| --- | ---: | ---: | ---: |
+| Valencia | 400 € | 450 € | 480 € |
+| León | 450 € | 468 € | 468 € |
+| Bilbao | 500 € | 458 € | 428 € |
+| Madrid | 600 € | 412 € | 412 € |
+| Sevilla | 700 € | 522 € | 522 € |
+| Barcelona | 350 € | 414 € | 540 € |
+
+Ambos métodos encontraron un viaje viable en tres de seis casos. Desde Bilbao, probar
+Sevilla en lugar de Barcelona redujo el mejor total en 30 €. Desde Barcelona, probar
+Valencia en otra fecha consumió el intento que la lista fija dedicó a Sevilla, y empeoró
+el mejor total. Este piloto mide el efecto sobre el precio con el catálogo ficticio.
+Los destinos que elige Qwen3 pueden variar entre ejecuciones.
+
+## Revisión del ciclo de decisión — 9 de noviembre de 2026
+
+Se corrigió la pérdida de resultados parciales, se eliminó el cambio automático de fechas
+que podía confundirse con una decisión de Qwen3 y se separó el diagnóstico calculado del
+objetivo elegido por el modelo. La revisión devuelve una sola acción validada. El modelo
+puede comparar otra opción aunque ya haya un plan asequible; los planes anteriores se conservan.
+Los límites de las etapas adicionales se respetan explícitamente.
+
+Durante el desarrollo, una explicación libre de Qwen3 afirmó incorrectamente que 480 €
+estaban dentro de 400 €. Esa salida ya no se muestra: el modelo selecciona un código de
+objetivo y Python redacta las cifras y las comparaciones. Una prueba reproduce el rechazo.
+
+### Resultado medido, sin selección de casos favorables
+
+Se repitieron los seis casos del piloto anterior, con los mismos datos ficticios,
+fechas (1–21 de febrero de 2027), dos adultos y tres noches. Cada método realizó tres
+intentos por caso. Qwen3 eligió consultas válidas en las revisiones, pero las rutas y fechas
+coincidieron con la lista fija. Resultado: **6 empates, 0 victorias y 0 derrotas**; ambos
+métodos encontraron un total dentro del presupuesto en **3 de 6 casos**.
+
+| Origen | Límite del grupo | Mejor total en ambos métodos |
+| --- | ---: | ---: |
+| VLC | 400 € | 450 € |
+| LEN | 450 € | 468 € |
+| BIO | 500 € | 458 € |
+| MAD | 600 € | 412 € |
+| SVQ | 700 € | 522 € |
+| BCN | 350 € | 414 € |
+
+El [informe JSON](resultado_revision_2026-11-09.json) incluye trazas, configuración del viaje,
+fecha, modelo, duración del caso y huellas SHA-256 del código evaluado. La duración conjunta
+por caso fue de 18–34 segundos; no es una comparación de latencia entre los métodos.
+Después de esa ejecución se precisó la etiqueta de traza para distinguir confirmar una
+consulta pendiente de cambiarla; no cambió la elección de consultas.
+
+Para repetir y guardar otro informe (Ollama necesario, SerpApi no):
+
+```bash
+.venv/bin/python -B -m evals.evaluar_replanteamiento --detalle --salida /tmp/evaluacion-viajesibi.json
+```
+
+Si Ollama falla, el evaluador conserva el fallo y termina con código distinto de cero.
+No elimina casos fallidos del balance. El catálogo sintético tiene precios construidos
+mediante fórmulas, no representa la distribución real de precios ni permite generalizar
+resultados a ofertas reales.
+
+### Qué se puede enseñar y qué falta demostrar
+
+- **Mecanismo comprobado:** `tests/test_revision_busqueda.py` reproduce con decisiones y
+  ofertas simuladas el paso de dos opciones fuera de presupuesto (900 y 850 €) a otra
+  de 650 €, cambiando la búsqueda tras observar el coste del alojamiento. Comprueba también
+  persistencia de opciones válidas, fechas permitidas, repeticiones, errores y límites.
+  Esto demuestra que el mecanismo funciona; no mide la calidad de Qwen3.
+- **Modelo real comprobado:** el piloto anterior ejecuta Qwen3 y registra sus decisiones.
+  Los seis empates no demuestran una mejora de recomendación. El modelo añade llamadas
+  para revisar y puede no aportar una ventaja. No se presenta como superior a otros productos.
+- **Demostración interactiva:** `Demostraciones → Comparación simulada` ejecuta ambos modos
+  con el mismo formulario, sin API. En los resultados se ve observación → siguiente decisión.
+  La comparación real sigue disponible en su propia pestaña y consume cuota de SerpApi.
+- **Siguiente evidencia necesaria:** evaluar un conjunto fijado de antemano de búsquedas
+  reales (o respuestas reales archivadas) con disponibilidad variable, varios presupuestos
+  y filtros. Medir éxito, coste, llamadas y latencia en todos los casos, incluidos empates y
+  derrotas. La adecuación a gustos libres necesita además evidencia de lugares/servicios;
+  una API de vuelos y hoteles no la verifica.
+
+La suite tras esta revisión tiene 162 pruebas y pasa sin omisiones en el entorno del
+proyecto. No se consumieron búsquedas de SerpApi durante esta revisión.
+
+## Resultado útil y consultas evitables — 10 de noviembre
+
+La interfaz distingue conseguir un viaje de encontrar un precio menor que todavía supera
+el presupuesto. El nuevo resumen muestra éxito, precio y consultas por separado; no llama
+ahorro a la diferencia con un viaje que el usuario no podía aceptar. Las comparaciones
+antiguas sin contador muestran datos no registrados, no cero consultas.
+
+Se aplica el descarte previo al hotel a **ambos métodos**, con el mismo límite. Si los vuelos
+comprobados ya superan ese límite, se evita la consulta de estancia y se pasa el diagnóstico
+a Qwen3. Esto es una optimización de Python, no evidencia exclusiva a favor de un agente.
+En la planificación normal se incluye el margen autorizado al decidir ese descarte.
+
+La prueba integrada `test_recuperacion_completa_tras_descartar_vuelo_sin_gastar_consulta_de_hotel`
+usa decisiones y ofertas simuladas: la lista comprueba vuelos de 950 y 850 €; el agente
+observa el vuelo de 950 € y consulta una alternativa de 350 € de vuelo + 300 € de hotel.
+Con 800 € de presupuesto, solo el agente consigue un viaje, pero requiere cinco consultas
+frente a cuatro de la lista. Se informa de ambas cosas. Esta prueba no es un resultado empírico de Qwen3.
+
+La prueba de eficiencia con el catálogo ficticio conserva los mismos destinos y pasa de
+8 a 6 consultas sin perder ninguna opción dentro del máximo de 200 €. Aísla el efecto
+del descarte previo, sin atribuírselo al replanteamiento del modelo.
+
+### Comprobación con Qwen3 real
+
+```bash
+.venv/bin/python -B -m evals.evaluar_replanteamiento --comprobar-limite --salida /tmp/limite-viajesibi.json
+```
+
+Se ejecutó con origen Madrid, dos adultos, tres noches y 200 € de grupo. Ambos métodos
+consultaron Valencia, Sevilla y Bilbao. Cada uno hizo 9 consultas de datos y evitó 3 de
+alojamiento porque los vuelos comprobados ya superaban el máximo. Ninguno consiguió un
+viaje admisible. Este caso comprueba el límite; **no sustituye el piloto de seis casos ni
+demuestra una ventaja del agente**. [Informe completo](resultado_limite_2026-11-10.json).
+
+La suite completa pasa **174 pruebas, sin omisiones**. No se consumió SerpApi.
+El [guion de presentación](guion_profesor.md) explica qué puede mostrarse a un público no técnico.
+
+## Laboratorio de experiencia
+
+`aprender_experiencia.py` ejecuta Qwen3 real sobre ofertas ficticias sin SerpApi.
+El objetivo es una opción válida desde Valencia para dos adultos, tres noches, cultura
+y 500 EUR totales. Práctica: 1 y 8 de febrero de 2027; validación: 15 y 22 de febrero.
+No se incorporan los resultados de validación a la memoria. Repetir el experimento no
+convierte estas fechas en nuevos casos independientes.
+
+La candidata añade evidencia histórica y reordena los candidatos. Se mide el efecto
+conjunto de ambos cambios, no una capacidad aislada del modelo. Se alterna el orden de
+ejecución de las estrategias. La validación exige no empeorar precio ni consultas,
+resolver ambos casos y mejorar alguna medida; empate significa no adoptar.
+
+Los informes incluyen trazas, consultas, llamadas al modelo y huellas del código.
+Se conservan los intentos fallidos y los rechazos. Los patrones semanales del catálogo
+limitan la generalización: falta una evaluación independiente con ofertas reales
+archivadas antes de afirmar una mejora comercial.
+
+### Repetición del 11 de noviembre de 2026
+
+[Informe completo](resultado_aprendizaje_2026-11-11.json): Qwen3 eligió `mantener`.
+No se ejecutó la comparación de una candidata ni se activó una nueva política.
+Esto comprueba el registro de experiencia y la decisión de conservar la estrategia;
+**no demuestra una mejora de eficiencia**. Se conserva también el intento anterior
+con el mismo resultado y el primer intento con un error de propuesta.
+
+Suite verificada: 190 pruebas pasan, sin omisiones. No se consumió SerpApi.
+
+### Revisión funcional y aprendizaje: 11 de noviembre
+
+Se ensayó un protocolo con identificadores de consulta. Los pilotos
+`resultado_revision_2026-11-11.json` y `resultado_revision_2026-11-11_exploracion.json`
+mostraron una regresión: el modelo insistía en cambiar fechas de la misma ciudad. Se
+retiró ese formato y se mantuvo la respuesta estructurada anterior, con validación de
+combinaciones pendientes y sugerencias de exploración explícitas. Se conservan ambos
+informes desfavorables; no describen la versión final.
+
+`resultado_aprendizaje_2026-11-11_revision.json`: tras aclarar que el rol de mejora
+propone un experimento (no lo aprueba), Qwen3 propuso `priorizar_exitos` con evidencia
+de Barcelona. En dos casos: precio 480 EUR por viaje en ambas estrategias; consultas
+8 → 4 y llamadas al modelo 2 → 1 por viaje. Adoptada. El coste previo fue 40 consultas
+ficticias y 11 llamadas al modelo entre práctica, propuesta y validación. Las pruebas
+reservadas no se incorporan a memoria, pero se reutilizan durante el desarrollo y el
+catálogo tiene periodicidad semanal: esto no es una evaluación independiente de mercado.
+
+Se reforzó la adopción: evidencia repetida existente en SQLite, importes finitos y
+dentro del presupuesto, y reutilización exclusiva de la evidencia evaluada.
+
+La revisión posterior conserva una política de exploración explícita: con un total
+confirmado se comprueba otro destino; cuando faltan ofertas o impuestos se permiten
+otras fechas de esa ciudad. Esto acota el uso de los tres intentos, no asegura que las
+otras fechas tengan el mismo precio ni que el destino quede descartado para siempre.
+La regla es de Python y no se atribuye al razonamiento del modelo.
+
+La suite tras esta revisión pasa **201 pruebas, sin omisiones**. Las comprobaciones
+de interfaz se hacen con Streamlit AppTest, sin APIs. La inspección visual por navegador
+no pudo completarse porque la herramienta de navegador agotó su tiempo de espera.

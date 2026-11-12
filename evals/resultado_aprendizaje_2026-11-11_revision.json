@@ -1,0 +1,435 @@
+{
+  "id": "8d880eedd15d4a8d937418433318ab3e",
+  "contexto": "{\"adultos\": 2, \"fuente\": \"ficticio-v1\", \"gustos\": [\"cultura\"], \"noches\": 3, \"nota\": 0, \"origen\": \"VLC\", \"tipos\": null}",
+  "fuente": "ficticio-v1",
+  "fecha_utc": "2026-11-10T23:42:22.121893+00:00",
+  "modelo": "qwen3:4b",
+  "propuesta": {
+    "estrategia": "priorizar_exitos",
+    "evidencias": [
+      "BCN"
+    ],
+    "hipotesis": "Comprobar primero destinos con éxitos repetidos puede encontrar un viaje con menos consultas. Los precios históricos no garantizan los actuales."
+  },
+  "experiencia": [
+    {
+      "aeropuerto": "BCN",
+      "observaciones": 2,
+      "media_historica": 480.0,
+      "minimo_historico": 480.0,
+      "maximo_historico": 480.0,
+      "fechas_observadas": [
+        "2027-02-01",
+        "2027-02-08"
+      ]
+    }
+  ],
+  "validacion": [
+    {
+      "sin_memoria": {
+        "ida": "2027-02-15",
+        "vuelta": "2027-02-18",
+        "viaje_encontrado": true,
+        "total": 480,
+        "consultas": 8,
+        "llamadas_modelo": 2,
+        "segundos": 21.12,
+        "error": null,
+        "revisiones_invalidas": 0,
+        "observaciones": [
+          {
+            "aeropuerto": "MAD",
+            "ida": "2027-02-15",
+            "vuelta": "2027-02-18",
+            "diagnostico": {
+              "estado": "con_ofertas",
+              "vuelos": 4,
+              "alojamientos": 39,
+              "vuelo_minimo": 268,
+              "alojamiento_minimo": 330
+            },
+            "consultas_proveedor": 4,
+            "llamadas_revision": 1,
+            "impuestos_confirmados": true,
+            "vuelo": 268,
+            "alojamiento": 330,
+            "total": 598,
+            "revision_estado": "valida",
+            "siguiente_decision": "Mantener la lista pendiente"
+          },
+          {
+            "aeropuerto": "BCN",
+            "ida": "2027-02-15",
+            "vuelta": "2027-02-18",
+            "diagnostico": {
+              "estado": "con_ofertas",
+              "vuelos": 4,
+              "alojamientos": 39,
+              "vuelo_minimo": 270,
+              "alojamiento_minimo": 210
+            },
+            "consultas_proveedor": 4,
+            "llamadas_revision": 0,
+            "impuestos_confirmados": true,
+            "vuelo": 270,
+            "alojamiento": 210,
+            "total": 480,
+            "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Madrid · 15/02 a 18/02.",
+          "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 268.00 € de vuelo + 330.00 € de estancia = 598.00 €.",
+          "Diagnóstico comprobado: El total publicado supera el presupuesto en 98.00 €. El componente de mayor coste es alojamiento.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Barcelona · 15/02 a 18/02.",
+          "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+        ],
+        "memoria_usada": []
+      },
+      "con_memoria": {
+        "ida": "2027-02-15",
+        "vuelta": "2027-02-18",
+        "viaje_encontrado": true,
+        "total": 480,
+        "consultas": 4,
+        "llamadas_modelo": 1,
+        "segundos": 21.72,
+        "error": null,
+        "revisiones_invalidas": 0,
+        "observaciones": [
+          {
+            "aeropuerto": "BCN",
+            "ida": "2027-02-15",
+            "vuelta": "2027-02-18",
+            "diagnostico": {
+              "estado": "con_ofertas",
+              "vuelos": 4,
+              "alojamientos": 39,
+              "vuelo_minimo": 270,
+              "alojamiento_minimo": 210
+            },
+            "consultas_proveedor": 4,
+            "llamadas_revision": 0,
+            "impuestos_confirmados": true,
+            "vuelo": 270,
+            "alojamiento": 210,
+            "total": 480,
+            "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Barcelona · 15/02 a 18/02.",
+          "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+        ],
+        "memoria_usada": [
+          {
+            "aeropuerto": "BCN",
+            "observaciones": 2,
+            "media_historica": 480.0,
+            "minimo_historico": 480.0,
+            "maximo_historico": 480.0,
+            "fechas_observadas": [
+              "2027-02-01",
+              "2027-02-08"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "con_memoria": {
+        "ida": "2027-02-22",
+        "vuelta": "2027-02-25",
+        "viaje_encontrado": true,
+        "total": 480,
+        "consultas": 4,
+        "llamadas_modelo": 1,
+        "segundos": 13.4,
+        "error": null,
+        "revisiones_invalidas": 0,
+        "observaciones": [
+          {
+            "aeropuerto": "BCN",
+            "ida": "2027-02-22",
+            "vuelta": "2027-02-25",
+            "diagnostico": {
+              "estado": "con_ofertas",
+              "vuelos": 4,
+              "alojamientos": 39,
+              "vuelo_minimo": 270,
+              "alojamiento_minimo": 210
+            },
+            "consultas_proveedor": 4,
+            "llamadas_revision": 0,
+            "impuestos_confirmados": true,
+            "vuelo": 270,
+            "alojamiento": 210,
+            "total": 480,
+            "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Barcelona · 22/02 a 25/02.",
+          "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+        ],
+        "memoria_usada": [
+          {
+            "aeropuerto": "BCN",
+            "observaciones": 2,
+            "media_historica": 480.0,
+            "minimo_historico": 480.0,
+            "maximo_historico": 480.0,
+            "fechas_observadas": [
+              "2027-02-01",
+              "2027-02-08"
+            ]
+          }
+        ]
+      },
+      "sin_memoria": {
+        "ida": "2027-02-22",
+        "vuelta": "2027-02-25",
+        "viaje_encontrado": true,
+        "total": 480,
+        "consultas": 8,
+        "llamadas_modelo": 2,
+        "segundos": 35.1,
+        "error": null,
+        "revisiones_invalidas": 0,
+        "observaciones": [
+          {
+            "aeropuerto": "MAD",
+            "ida": "2027-02-22",
+            "vuelta": "2027-02-25",
+            "diagnostico": {
+              "estado": "con_ofertas",
+              "vuelos": 4,
+              "alojamientos": 39,
+              "vuelo_minimo": 268,
+              "alojamiento_minimo": 330
+            },
+            "consultas_proveedor": 4,
+            "llamadas_revision": 1,
+            "impuestos_confirmados": true,
+            "vuelo": 268,
+            "alojamiento": 330,
+            "total": 598,
+            "revision_estado": "valida",
+            "siguiente_decision": "Mantener la lista pendiente"
+          },
+          {
+            "aeropuerto": "BCN",
+            "ida": "2027-02-22",
+            "vuelta": "2027-02-25",
+            "diagnostico": {
+              "estado": "con_ofertas",
+              "vuelos": 4,
+              "alojamientos": 39,
+              "vuelo_minimo": 270,
+              "alojamiento_minimo": 210
+            },
+            "consultas_proveedor": 4,
+            "llamadas_revision": 0,
+            "impuestos_confirmados": true,
+            "vuelo": 270,
+            "alojamiento": 210,
+            "total": 480,
+            "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Madrid · 22/02 a 25/02.",
+          "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 268.00 € de vuelo + 330.00 € de estancia = 598.00 €.",
+          "Diagnóstico comprobado: El total publicado supera el presupuesto en 98.00 €. El componente de mayor coste es alojamiento.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Barcelona · 22/02 a 25/02.",
+          "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+        ],
+        "memoria_usada": []
+      }
+    }
+  ],
+  "limites": {
+    "intentos_por_caso": 3,
+    "objetivo_opciones": 1,
+    "presupuesto": 500
+  },
+  "codigo_sha256": {
+    "mejora_agente.py": "75331ed247cb1d591340607b1a8adde942eedbd7ec5d3be7e1b2c9974efabb48",
+    "seleccion_viaje.py": "d2fe794e8af4c578e5f7e28729f7732d5437d442038e95023f48f99557232148",
+    "demo_ofertas.py": "ae2d24f9ba9119d211f162a394e09c1e0120d93ab6b10a144257acc5bc4af836"
+  },
+  "adoptada": true,
+  "motivo_validacion": "Resuelve los casos reservados sin empeorar coste ni consultas y mejora al menos una medida.",
+  "practica": [
+    {
+      "ida": "2027-02-01",
+      "vuelta": "2027-02-04",
+      "viaje_encontrado": true,
+      "total": 480,
+      "consultas": 8,
+      "llamadas_modelo": 2,
+      "segundos": 12.75,
+      "error": null,
+      "revisiones_invalidas": 0,
+      "observaciones": [
+        {
+          "aeropuerto": "MAD",
+          "ida": "2027-02-01",
+          "vuelta": "2027-02-04",
+          "diagnostico": {
+            "estado": "con_ofertas",
+            "vuelos": 4,
+            "alojamientos": 39,
+            "vuelo_minimo": 268,
+            "alojamiento_minimo": 330
+          },
+          "consultas_proveedor": 4,
+          "llamadas_revision": 1,
+          "impuestos_confirmados": true,
+          "vuelo": 268,
+          "alojamiento": 330,
+          "total": 598,
+          "revision_estado": "valida",
+          "siguiente_decision": "Mantener la lista pendiente"
+        },
+        {
+          "aeropuerto": "BCN",
+          "ida": "2027-02-01",
+          "vuelta": "2027-02-04",
+          "diagnostico": {
+            "estado": "con_ofertas",
+            "vuelos": 4,
+            "alojamientos": 39,
+            "vuelo_minimo": 270,
+            "alojamiento_minimo": 210
+          },
+          "consultas_proveedor": 4,
+          "llamadas_revision": 0,
+          "impuestos_confirmados": true,
+          "vuelo": 270,
+          "alojamiento": 210,
+          "total": 480,
+          "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+        }
+      ],
+      "traza": [
+        "Consulta elegida por Qwen3: Madrid · 01/02 a 04/02.",
+        "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+        "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+        "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+        "Mejor combinación comprobada: 268.00 € de vuelo + 330.00 € de estancia = 598.00 €.",
+        "Diagnóstico comprobado: El total publicado supera el presupuesto en 98.00 €. El componente de mayor coste es alojamiento.",
+        "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+        "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+        "Consulta elegida por Qwen3: Barcelona · 01/02 a 04/02.",
+        "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+        "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+        "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+        "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+        "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+        "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+      ],
+      "memoria_usada": []
+    },
+    {
+      "ida": "2027-02-08",
+      "vuelta": "2027-02-11",
+      "viaje_encontrado": true,
+      "total": 480,
+      "consultas": 8,
+      "llamadas_modelo": 2,
+      "segundos": 10.84,
+      "error": null,
+      "revisiones_invalidas": 0,
+      "observaciones": [
+        {
+          "aeropuerto": "MAD",
+          "ida": "2027-02-08",
+          "vuelta": "2027-02-11",
+          "diagnostico": {
+            "estado": "con_ofertas",
+            "vuelos": 4,
+            "alojamientos": 39,
+            "vuelo_minimo": 268,
+            "alojamiento_minimo": 330
+          },
+          "consultas_proveedor": 4,
+          "llamadas_revision": 1,
+          "impuestos_confirmados": true,
+          "vuelo": 268,
+          "alojamiento": 330,
+          "total": 598,
+          "revision_estado": "valida",
+          "siguiente_decision": "Mantener la lista pendiente"
+        },
+        {
+          "aeropuerto": "BCN",
+          "ida": "2027-02-08",
+          "vuelta": "2027-02-11",
+          "diagnostico": {
+            "estado": "con_ofertas",
+            "vuelos": 4,
+            "alojamientos": 39,
+            "vuelo_minimo": 270,
+            "alojamiento_minimo": 210
+          },
+          "consultas_proveedor": 4,
+          "llamadas_revision": 0,
+          "impuestos_confirmados": true,
+          "vuelo": 270,
+          "alojamiento": 210,
+          "total": 480,
+          "siguiente_decision": "Objetivo cumplido: se detiene la búsqueda"
+        }
+      ],
+      "traza": [
+        "Consulta elegida por Qwen3: Madrid · 08/02 a 11/02.",
+        "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+        "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+        "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+        "Mejor combinación comprobada: 268.00 € de vuelo + 330.00 € de estancia = 598.00 €.",
+        "Diagnóstico comprobado: El total publicado supera el presupuesto en 98.00 €. El componente de mayor coste es alojamiento.",
+        "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+        "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+        "Consulta elegida por Qwen3: Barcelona · 08/02 a 11/02.",
+        "Transporte: 4 idas y vueltas con precio, tras revisar 2 opciones de ida.",
+        "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+        "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+        "Mejor combinación comprobada: 270.00 € de vuelo + 210.00 € de estancia = 480.00 €.",
+        "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+        "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+      ],
+      "memoria_usada": []
+    }
+  ]
+}

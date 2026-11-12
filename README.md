@@ -1,8 +1,98 @@
 # Agente de recomendación de viajes
 
-Proyecto universitario de IA agéntica: un asistente que interpretará preferencias en lenguaje natural, decidirá qué herramientas consultar y recomendará hasta tres destinos apoyándose en sus resultados.
+Proyecto universitario de IA agéntica: un asistente que interpreta preferencias en lenguaje natural, decide qué consultar y recomienda hasta tres destinos apoyándose en sus resultados.
 
 **Estado:** aplicación web local de planificación con Qwen3 y ofertas de SerpApi. El modo terminal conserva el catálogo simulado y funciona sin claves.
+
+
+## Versión actual: qué hace realmente el agente
+
+La web tiene cuatro pestañas: **Planificar viaje**, **Comparar IA y agente**,
+**Demostraciones** y **Aprendizaje**. Las dos primeras consultan SerpApi; las simulaciones
+y el laboratorio usan ofertas ficticias con Qwen3 real. Ninguna permite reservar o pagar.
+En **Demostraciones → Defender el proyecto** se explican los roles y los resultados medidos.
+
+- **Qwen3 decide** destinos y fechas, recibe resultados y elige la siguiente consulta.
+- **Herramientas Python consultan** vuelos y alojamientos y combinan tarifas publicadas.
+- **Python valida** fechas, aeropuerto, repetición de consultas, límites y presupuesto.
+- **SQLite conserva** prioridades confirmadas, búsquedas/comparaciones y experiencia del laboratorio.
+- **Qwen3, en el rol de mejora**, propone una política; Python la compara y solo la adopta si cumple el criterio.
+
+Estas son responsabilidades del sistema: las herramientas de vuelos y hoteles no son
+otros LLM autónomos. El agente de planificación usa Qwen3. Guardar preferencias actualiza
+un perfil; no reentrena el modelo. No llamamos «aprendizaje» a repetir consultas sin usar sus resultados.
+
+### Resultado de aprendizaje comprobado
+
+En dos pruebas ficticias con Qwen3 real, priorizar destinos con éxitos repetidos redujo
+las consultas de 8 a 4 por viaje, manteniendo el coste de 480 EUR. El modelo pasó de
+2 llamadas a 1 por viaje. La estrategia quedó guardada. Practicar y validarla requirió
+40 consultas ficticias y 11 llamadas al modelo; no equivale a ahorro neto desde el principio.
+[Informe completo](evals/resultado_aprendizaje_2026-11-11_revision.json).
+
+Es evidencia limitada a esos casos, con patrones semanales repetidos. No demuestra una
+ventaja general con ofertas reales. Consulta el [guion de defensa](evals/guion_profesor.md).
+
+### Ciclo de revisión
+
+Tras cada intento se conserva un diagnóstico, incluso si solo se consiguió el vuelo.
+Qwen3 recibe el precio de cada componente, los datos que faltan y las consultas anteriores.
+Elige una siguiente consulta o mantiene la lista pendiente. El modelo elige un objetivo entre códigos permitidos (comparar vuelo, alojamiento,
+precio total o disponibilidad); Python redacta la etiqueta. No se muestra razonamiento
+libre que pueda inventar precios o comparaciones de presupuesto.
+Una respuesta inválida mantiene los candidatos pendientes: Python no cambia fechas al azar
+para aparentar una decisión del agente. Una opción válida encontrada se conserva aunque
+un intento posterior falle. La búsqueda inicial tiene un máximo de tres intentos; las
+etapas adicionales, uno cada una.
+
+En **Comparar IA y agente → Cómo cambió la búsqueda del agente** se ven el resultado
+observado y la siguiente decisión. Ambos métodos comparten la propuesta inicial,
+los filtros y el máximo de intentos. La lista fija también accede a las mismas herramientas:
+la diferencia que se evalúa es recibir resultados y replantear. Se muestran costes,
+consultas al proveedor y también empates o derrotas. Las consultas idénticas reutilizan
+la respuesta dentro de esa comparación. Más intentos no prueban por sí solos una mejora.
+
+### Límites que hay que explicar en clase
+
+- El origen y destino se eligen entre los aeropuertos de `CIUDADES`. Solo hay alternativas
+  de salida configuradas para León. No se busca en todas las ciudades ni todas las fechas.
+- Las fechas flexibles se muestrean en hasta tres intervalos; no se puede afirmar que se
+  encontró el viaje más barato de todo el periodo.
+- Los gustos orientan la selección del modelo, pero la API no verifica «buena cerveza»,
+  «buena comida» o la adecuación de una ciudad a todos los gustos. Mantener un gusto en
+  el prompt no demuestra que un destino lo cumpla.
+- Solo los totales con impuestos informados se consideran confirmados; las demás tarifas
+  se muestran como provisionales. El presupuesto cubre vuelo y alojamiento, no traslados,
+  comidas ni actividades.
+- Un resultado sin precio no equivale a inexistencia de viajes. El sistema deja de buscar
+  al agotar sus límites y conserva los resultados parciales.
+- No hay garantía de superar a una lista fija, a otra IA o a un buscador comercial.
+  Las pruebas de mecanismo y la evaluación con el modelo miden cosas distintas.
+
+### Ejecutar y demostrar
+
+Con el entorno instalado y Ollama abierto:
+
+```bash
+.venv/bin/python -m streamlit run app.py --server.address 127.0.0.1 --browser.gatherUsageStats false
+.venv/bin/python -B -m unittest discover -s tests
+```
+
+Para evaluar Qwen3 con seis casos predefinidos y datos ficticios, sin gastar SerpApi:
+
+```bash
+.venv/bin/python -B -m evals.evaluar_replanteamiento
+```
+
+Consulta [el protocolo y los resultados](evals/README.md). Para la presentación, muestra
+primero una búsqueda guardada, después su secuencia de decisiones y finalmente el balance
+completo; no selecciones solo una ejecución favorable.
+
+## Núcleo original de terminal y evolución del proyecto
+
+Los apartados siguientes documentan el catálogo de 15 destinos y su evolución. Sus límites
+(Madrid, costes ficticios, chat y tres herramientas) corresponden al núcleo de terminal,
+no al formulario actual de ofertas reales descrito arriba.
 
 ## Conceptos básicos
 
@@ -306,7 +396,7 @@ Desde la carpeta del proyecto, prepara un entorno separado (solo la primera vez)
 ~~~bash
 cd /Users/lucia/Documents/viajeSIBI
 python3 -m venv .venv
-.venv/bin/python -m pip install 'streamlit>=1.32,<2'
+.venv/bin/python -m pip install 'streamlit>=1.66,<2'
 ~~~
 
 Abre Ollama con el modelo `qwen3:4b` disponible. Para iniciar la interfaz:
@@ -375,9 +465,8 @@ La comparación mide el efecto de ampliar la búsqueda en ese caso, con el mismo
 
 
 Cuando ninguna combinación encaja, Qwen3 recibe los precios comprobados de vuelo y estancia
-antes de elegir otro destino. Se comprueban hasta tres combinaciones de destino y fechas sin repetir una consulta. Si todos los
-planes completos superan el presupuesto, la pantalla muestra hasta tres alternativas por coste,
-indica cuánto falta para cada una y permite ajustar el presupuesto o las fechas en el formulario.
+antes de elegir otro destino. Se comprueban hasta tres combinaciones de destino y fechas sin repetir una consulta. Si los planes superan el presupuesto inicial, la pantalla solo muestra alternativas dentro
+del margen elegido e indica el coste adicional. Puedes ajustar el presupuesto o las fechas en el formulario.
 
 
 Si el origen es León y la búsqueda inicial no da un plan viable, se consultan alternativas
@@ -392,3 +481,130 @@ inicial es de 50 € por adulto, con un máximo de 100 € por grupo. Si una alt
 encaja en ese margen desde el origen solicitado, se muestra antes de cambiar de aeropuerto
 o flexibilizar gustos. El presupuesto original se conserva. Puedes recordar las prioridades
 en el perfil local de SQLite mediante la casilla del formulario.
+
+Si se muestra un aeropuerto alternativo, puedes marcar que prefieres mantener el aeropuerto
+original para ese viaje. Tras hacerlo en dos búsquedas distintas desde el mismo origen,
+ViajeSIBI te propone recordarlo. Solo fija la salida para futuras búsquedas si lo confirmas.
+
+
+El formulario pide el presupuesto por persona y calcula el importe del grupo. El máximo
+mostrado suma el margen permitido al presupuesto. Una tarifa por encima de ese máximo
+queda fuera de las recomendaciones, incluso si todavía faltan impuestos por confirmar.
+
+### Demostración sin gastar búsquedas
+
+Abre la pestaña **Demostraciones** y elige una opción:
+
+| Opción | Qué puedes enseñar | Requisitos |
+| --- | --- | --- |
+| **Comparación simulada** | Ejecuta ambos métodos con Qwen3 y las mismas ofertas ficticias; muestra decisiones y permite guardar la comparación. | Ollama con `qwen3:4b`. |
+| **Búsqueda simulada** | Rellena el formulario con tus datos y observa cómo Qwen3 propone destinos, aplica los filtros y replantea la búsqueda cuando hace falta. | Ollama con `qwen3:4b`. |
+| **Búsquedas guardadas** | Vuelve a mostrar las ofertas y la traza de una búsqueda real anterior. Pulsa **Guardar esta búsqueda para la demo** al terminar la consulta real. | Una búsqueda guardada en la base SQLite local. |
+
+La búsqueda simulada utiliza el mismo planificador que la búsqueda real. El módulo
+[`demo_ofertas.py`](src/demo_ofertas.py) genera las ofertas al consultar el catálogo ficticio. Genera dos horarios de ida y dos de vuelta
+por ruta y hasta 39 alojamientos por ciudad, con tres zonas por tipo. Los precios
+varían según la ruta, las fechas, el número de viajeros y las noches. El formulario
+permite incluir o excluir tipos de alojamiento y exigir una valoración mínima.
+
+Los modos de Demostraciones funcionan sin clave y no consumen consultas de SerpApi.
+Las búsquedas guardadas muestran los precios de la consulta original. La clave de
+SerpApi queda fuera de la base de datos y del repositorio.
+
+La pestaña **Comparar IA y agente** ejecuta la lista fija y el planificador adaptativo con la misma
+propuesta inicial de Qwen3 y el mismo máximo de intentos. Usa ofertas reales de SerpApi
+por defecto y comparte las respuestas de consultas idénticas dentro de cada comparación.
+Los datos ficticios se usan en **Demostraciones → Búsqueda simulada / Comparación simulada** y en las evaluaciones locales.
+Compara destinos, fechas, mejor coste y si el resultado cabe en el presupuesto base.
+La comparación mantiene fijo el aeropuerto y no añade margen ni cambia gustos.
+
+Puedes conservar el resultado y ambas trazas con **Guardar esta comparación**.
+Después, abre **Demostraciones → Comparaciones guardadas** para reproducirlas sin Ollama ni SerpApi.
+
+## Valor visible y ahorro de consultas (10 de noviembre)
+
+La comparación empieza por **¿Qué consiguió cada método?**: viaje dentro del presupuesto,
+mejor total confirmado y consultas de datos. No declara un viaje conseguido solo porque un
+precio sea menor si sigue fuera de presupuesto. El balance de comparaciones guardadas usa
+el presupuesto de cada búsqueda; los registros antiguos sin contador muestran «no registrado».
+
+Si todos los vuelos de ida y vuelta comprobados superan el máximo autorizado, Python no
+consulta alojamiento para esas combinaciones. La planificación normal respeta el margen;
+la comparación usa el presupuesto base. El diagnóstico llega a Qwen3 para decidir la próxima
+consulta. Esta optimización se aplica a ambos métodos; no demuestra superioridad del LLM.
+No descarta toda la ciudad, ni garantiza que se hayan encontrado los vuelos más baratos.
+
+Las cifras de consultas incluyen las reutilizadas desde caché. No son una factura de SerpApi
+ni una medida de tiempo humano. En **Demostraciones** hay una explicación breve y puedes
+seguir el [guion para presentar el proyecto](evals/guion_profesor.md).
+
+## Aprendizaje de estrategias (laboratorio)
+
+La pestaña **Aprendizaje** permite observar un ciclo completo: **buscar → recordar
+resultados → proponer una estrategia → compararla → conservarla solo si mejora**.
+Se inspira en [Harness²](https://github.com/google-research/harness2), pero no instala
+ese proyecto ni reproduce sus resultados. Qwen3 conserva sus pesos.
+
+- El planificador Qwen3 elige consultas de viaje. Otro rol de Qwen3 propone mantener
+  la estrategia o priorizar destinos con resultados repetidos favorables.
+- SQLite conserva experiencia y experimentos entre sesiones. Python comprueba los
+  resultados: el modelo no puede aprobar su propia mejora.
+- Se practican dos viajes y, si hay una propuesta nueva, se comparan ambas estrategias
+  en otras dos fechas. Tienen el mismo presupuesto, herramientas y máximo de intentos;
+  ambas se detienen al encontrar una opción válida.
+- Solo se adopta la candidata si resuelve ambos casos sin empeorar precio ni consultas
+  y mejora alguna medida. Los empates, errores y rechazos quedan visibles.
+- La experiencia orienta las consultas; **todos los precios se consultan de nuevo**.
+  Los datos ficticios nunca se transfieren a búsquedas reales.
+
+Abre **Aprendizaje**, pulsa **Realizar las dos búsquedas de práctica** y después
+**Proponer una mejora y probarla en fechas reservadas**. Si se aprueba, podrás probarla
+con otro viaje. Los informes se conservan y se pueden descargar. Se necesita Ollama
+con `qwen3:4b`; no se necesita SerpApi.
+
+El laboratorio usa ofertas ficticias, con patrones semanales repetidos. Sus resultados
+no demuestran superioridad general ni ahorro con ofertas reales. Aprender también
+consume consultas: la interfaz muestra el coste de la validación por separado.
+La política aprobada puede usarse en **Demostraciones → Búsqueda simulada** con el mismo
+contexto (Valencia, dos adultos, tres noches, cultura, sin filtros de alojamiento) y
+una opción solicitada. El resto de búsquedas mantiene su funcionamiento.
+
+Para repetir el experimento y guardar un informe sin modificar la memoria de la app:
+
+```bash
+.venv/bin/python -B -m evals.aprender_experiencia --salida /tmp/aprendizaje-viajesibi.json
+```
+
+Añade `--guardar-local` si quieres conservar esa experiencia en la aplicación.
+
+## Defensa y revisión del 11 de noviembre
+
+**Demostraciones → Defender el proyecto** explica los roles y permite abrir y descargar
+los pilotos completos sin consumir API ni llamar al modelo. Incluye resultados negativos,
+no solo ejemplos favorables. El [guion de defensa](evals/guion_profesor.md) contiene una
+explicación breve, preguntas habituales y un recorrido de cinco minutos.
+
+La comparación cuenta también llamadas al modelo y revisiones inválidas. La llamada de
+propuesta inicial se comparte y se atribuye una vez a cada método; no deben sumarse ambas
+columnas para calcular el trabajo físico de esa llamada compartida.
+
+La búsqueda cuenta destinos distintos al comprobar el objetivo, aunque se hayan consultado
+varias fechas de una ciudad. El modelo recibe las combinaciones todavía disponibles y un
+orden de exploración sugerido por Python; sigue eligiendo la siguiente consulta. Con un
+total confirmado se exploran otros destinos; si faltan datos, se permiten otras fechas.
+Esta política evita consumir los tres intentos en una ciudad, sin afirmar que su precio
+sea igual en todas las fechas. Las respuestas
+inválidas se bloquean y se conserva el plan pendiente y los resultados ya comprobados.
+
+La memoria exige éxitos repetidos dentro del presupuesto: una media barata no oculta un
+viaje caro. La política aprobada reutiliza solo la evidencia que se evaluó, no destinos nuevos
+agregados después. Las pruebas rechazan métricas incoherentes, precios no finitos y éxitos
+etiquetados fuera de presupuesto. El laboratorio no transfiere experiencia ficticia a ofertas reales.
+
+Verificación de esta revisión: **201 pruebas automáticas pasan, sin omisiones**, incluidas
+las de interfaz con respuestas simuladas. Ejecuta `.venv/bin/python -B -m unittest discover -s tests`.
+Las ejecuciones con Qwen3 real están documentadas por separado en `evals/`; no se consumió SerpApi.
+
+## Diario de seguimiento
+
+[Informe semanal y registro diario del 9 al 13 de noviembre de 2026](output/pdf/Diario_semanal_SIBI_9_13_noviembre_2026.pdf).
