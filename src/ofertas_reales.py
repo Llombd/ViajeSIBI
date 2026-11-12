@@ -4,8 +4,40 @@ from datetime import datetime
 import json
 from math import isfinite
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlsplit
 from urllib.request import urlopen
+
+
+TIPOS_ALOJAMIENTO = {
+    "Hoteles de playa": 12, "Hoteles boutique": 13, "Hostales y albergues": 14,
+    "Posadas": 15, "Moteles": 16, "Resorts": 17, "Hoteles con spa": 18,
+    "Bed & breakfast": 19, "Otros": 20, "Apartahoteles": 21,
+    "Minshuku": 22, "Hoteles de negocios japoneses": 23, "Ryokan": 24,
+}
+
+
+def consultar_con_filtros(consultar, parametros, tipos, nota_minima):
+    if parametros["engine"] != "google_hotels":
+        return consultar(parametros)
+    if tipos is not None:
+        parametros = {**parametros, "property_types": ",".join(str(codigo) for codigo in tipos)}
+    datos = consultar(parametros)
+    if nota_minima:
+        datos = {**datos, "properties": [
+            hotel for hotel in datos.get("properties", [])
+            if importe_valido(hotel.get("overall_rating")) and nota_minima <= hotel["overall_rating"] <= 5
+        ]}
+    return datos
+
+
+def enlace_vuelos(datos):
+    url = (datos.get("search_metadata") or {}).get("google_flights_url")
+    if isinstance(url, str):
+        enlace = urlsplit(url)
+        if (enlace.scheme == "https" and enlace.netloc == "www.google.com"
+                and enlace.path == "/travel/flights" and parse_qs(enlace.query).get("tfs")):
+            return url
+    return None
 
 
 class ErrorOfertas(Exception):
@@ -58,8 +90,12 @@ def hora_segmento(segmentos, aeropuerto):
         return None
 
 
-def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, presupuesto):
+def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, presupuesto, *, diagnostico=None, limite_total=None):
     """Combina resultados del proveedor sin completar precios o tramos ausentes."""
+    # Conserva también los resultados parciales: sin hotel puede haber un vuelo útil.
+    if diagnostico is None:
+        diagnostico = {}
+    diagnostico.update(estado="sin_vuelos", vuelos=0, alojamientos=0)
     comunes = {"currency": "EUR", "adults": adultos, "hl": "es", "gl": "es"}
     ruta = {
         **comunes, "engine": "google_flights", "type": 1, "departure_id": origen,
@@ -69,7 +105,9 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
     vuelos = []
     tokens = set()
     registro = []
-    for opcion in opciones_vuelo(consultar(ruta)):
+    ida_resultados = consultar(ruta)
+    enlace_ida = enlace_vuelos(ida_resultados)
+    for opcion in opciones_vuelo(ida_resultados):
         tramos_ida = opcion.get("flights") or []
         token = opcion.get("departure_token")
         if not tramos_ida or not token or token in tokens:
@@ -87,11 +125,26 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
             tramos_vuelta = regreso.get("flights") or []
             precio = regreso.get("price")
             if tramos_vuelta and importe_valido(precio):
-                vuelos.append((precio, tramos_ida, tramos_vuelta))
+                vuelos.append((precio, tramos_ida, tramos_vuelta, enlace_vuelos(regresos) or enlace_ida))
         if len(tokens) == 2:
             break
     if not vuelos:
         return [], [*registro, "Google Flights no devolvió una ida y vuelta utilizable entre las opciones consultadas."]
+
+    diagnostico.update(estado="sin_alojamiento", vuelos=len(vuelos),
+                       vuelo_minimo=min(vuelo[0] for vuelo in vuelos))
+
+    # Una estancia no puede abaratar un vuelo que ya supera todo el máximo.
+    # Solo descartamos las combinaciones de vuelos consultadas, no toda la ruta.
+    if limite_total is not None and diagnostico["vuelo_minimo"] > limite_total:
+        diagnostico.update(estado="vuelo_supera_maximo", limite_total=limite_total,
+                           consultas_hotel_evitadas=1)
+        registro.append(
+            f"Los vuelos comprobados cuestan al menos {diagnostico['vuelo_minimo']:.2f} €, "
+            f"más que el máximo de {limite_total:.2f} €. Python evita consultar el hotel; "
+            "estas combinaciones no pueden encajar. Quedan otras rutas o fechas por comprobar."
+        )
+        return [], registro
 
     hoteles = consultar({
         **comunes, "engine": "google_hotels", "q": ciudad,
@@ -105,18 +158,22 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
         if not impuestos:
             precio = tarifa.get("extracted_display_price")
         if hotel.get("name") and importe_valido(precio):
-            alojamientos.append((precio, hotel["name"], impuestos))
+            alojamientos.append((precio, hotel["name"], impuestos, hotel.get("overall_rating")))
     planes = [
         {"total": precio_vuelo + precio_hotel, "vuelo": precio_vuelo, "alojamiento": precio_hotel,
-         "nombre": nombre, "ida": tramos_ida, "vuelta": tramos_vuelta, "impuestos_confirmados": impuestos}
-        for precio_vuelo, tramos_ida, tramos_vuelta in vuelos
-        for precio_hotel, nombre, impuestos in alojamientos
+         "nombre": nombre, "ida": tramos_ida, "vuelta": tramos_vuelta, "impuestos_confirmados": impuestos,
+         "enlace_vuelos": enlace, "nota_alojamiento": nota}
+        for precio_vuelo, tramos_ida, tramos_vuelta, enlace in vuelos
+        for precio_hotel, nombre, impuestos, nota in alojamientos
     ]
     planes.sort(key=lambda plan: (not plan["impuestos_confirmados"], plan["total"]))
+    diagnostico["alojamientos"] = len(alojamientos)
+    if alojamientos:
+        diagnostico.update(estado="con_ofertas", alojamiento_minimo=min(hotel[0] for hotel in alojamientos))
     registro.extend([
         f"Transporte: {len(vuelos)} idas y vueltas con precio, tras revisar {len(tokens)} opciones de ida.",
-        f"Alojamiento: {sum(impuestos for _, _, impuestos in alojamientos)} tarifas con impuestos y "
-        f"{sum(not impuestos for _, _, impuestos in alojamientos)} con impuestos por confirmar.",
-        f"Coordinación: {sum(plan['impuestos_confirmados'] and plan['total'] > presupuesto for plan in planes)} combinaciones superan el presupuesto.",
+        f"Alojamiento: {sum(impuestos for _, _, impuestos, _ in alojamientos)} tarifas con impuestos y "
+        f"{sum(not impuestos for _, _, impuestos, _ in alojamientos)} con impuestos por confirmar.",
+        f"Coordinación: {sum(plan['total'] > presupuesto for plan in planes)} combinaciones superan el presupuesto según la tarifa publicada.",
     ])
     return planes[:3], registro

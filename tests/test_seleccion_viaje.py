@@ -77,15 +77,15 @@ class TestSeleccionViaje(unittest.TestCase):
             planes, registro, primer_total = explorar_ofertas(
                 Mock(), "VLC", [("OPO", fecha), ("PRG", fecha)], 2, 800, replantear,
             )
-        self.assertEqual(replantear.call_args.args[0][0],
+        self.assertEqual({k: replantear.call_args.args[0][0][k] for k in ("aeropuerto", "ida", "vuelta", "total", "vuelo", "alojamiento", "impuestos_confirmados")},
                          {"aeropuerto": "OPO", "ida": "2027-02-10", "vuelta": "2027-02-13",
                           "total": 900, "vuelo": 200, "alojamiento": 700, "impuestos_confirmados": True})
         self.assertEqual([llamada.args[2] for llamada in buscar.call_args_list], ["OPO", "LIS"])
         self.assertEqual([plan["total"] for plan in planes], [650, 900])
         self.assertEqual(primer_total, 900)
-        self.assertTrue(any("revisó los resultados" in paso for paso in registro))
+        self.assertTrue(any("tras revisar los resultados" in paso for paso in registro))
 
-    def test_agota_alternativas_sin_repetir_aunque_el_modelo_repita(self):
+    def test_no_inventa_alternativas_si_el_modelo_solo_repite(self):
         primera = (date(2027, 2, 10), date(2027, 2, 13))
         segunda = (date(2027, 2, 11), date(2027, 2, 14))
         replantear = Mock(return_value=[("OPO", primera)])
@@ -93,7 +93,7 @@ class TestSeleccionViaje(unittest.TestCase):
             planes, _, _ = explorar_ofertas(Mock(), "LEN", [("OPO", primera)], 2, 800,
                                               replantear, (primera, segunda))
         consultas = [(llamada.args[2], llamada.args[4]) for llamada in buscar.call_args_list]
-        self.assertEqual(len(set(consultas)), 3)
+        self.assertEqual(len(set(consultas)), 1)
         self.assertEqual(planes, [])
 
     def test_alternativas_prueban_aeropuertos_antes_de_relajar_gustos(self):
@@ -132,3 +132,54 @@ class TestSeleccionViaje(unittest.TestCase):
         self.assertEqual(planes[0]["salida"], "LEN")
         self.assertEqual(planes[0]["preferencias_omitidas"], ())
         self.assertIn("dentro del margen", registro[-1])
+
+    def test_comparacion_controlada_con_mismo_numero_de_consultas(self):
+        fecha = (date(2027, 2, 10), date(2027, 2, 13))
+        ofertas = {
+            "OPO": {"total": 900, "vuelo": 200, "alojamiento": 700},
+            "PRG": {"total": 850, "vuelo": 250, "alojamiento": 600},
+            "LIS": {"total": 650, "vuelo": 350, "alojamiento": 300},
+        }
+
+        def consultar_plan(consultar, origen, destino, ciudad, ida, vuelta, adultos, presupuesto, **kwargs):
+            return [ofertas[destino]], []
+
+        propuestas = [("OPO", fecha), ("PRG", fecha)]
+        with patch("src.seleccion_viaje.buscar_planes", side_effect=consultar_plan) as buscar:
+            fijos, _, _ = explorar_ofertas(Mock(), "VLC", propuestas, 2, 800)
+            consultas_fijas = buscar.call_count
+            buscar.reset_mock()
+            adaptados, _, _ = explorar_ofertas(
+                Mock(), "VLC", propuestas, 2, 800, lambda _: [("LIS", fecha)],
+            )
+            self.assertEqual(buscar.call_count, consultas_fijas)
+        self.assertGreater(fijos[0]["total"], 800)
+        self.assertEqual(adaptados[0]["total"], 650)
+
+    def test_comparacion_no_cambia_fechas_por_su_cuenta(self):
+        primera = (date(2027, 1, 1), date(2027, 1, 4))
+        segunda = (date(2027, 1, 15), date(2027, 1, 18))
+        propuestas = [("OPO", primera), ("LIS", primera)]
+        with patch("src.seleccion_viaje.buscar_planes", return_value=([], [])) as consultar:
+            _, traza, _ = explorar_ofertas(
+                Mock(), "LEN", propuestas, 2, 400, replantear=lambda _: [propuestas[1]],
+                fechas=[primera, segunda], limite_intentos=2, conservar_pendientes=True,
+            )
+        self.assertEqual([(c.args[2], c.args[4]) for c in consultar.call_args_list],
+                         [("OPO", primera[0]), ("LIS", primera[0])])
+        self.assertFalse(any("otras fechas permitidas" in paso for paso in traza))
+
+    def test_balance_distingue_ganador_empate_y_precios_sin_confirmar(self):
+        from src.seleccion_viaje import evaluar_comparacion
+
+        intentos = [{}, {}]
+        fija = ("Lista fija", intentos, [{"total": 850}], [])
+        for plan, esperado in (
+            ({"total": 650}, "Gana el agente"),
+            ({"total": 850}, "Empate"),
+            ({"total": 900}, "Gana la lista fija"),
+            ({"total": 650, "impuestos_confirmados": False}, "Sin datos suficientes"),
+        ):
+            with self.subTest(plan=plan):
+                adaptativa = ("Agente", intentos, [plan], [])
+                self.assertEqual(evaluar_comparacion([fija, adaptativa]), esperado)
