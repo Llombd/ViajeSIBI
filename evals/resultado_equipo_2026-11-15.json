@@ -1,0 +1,86 @@
+{
+  "fecha_utc": "2026-11-15T18:57:47.448678+00:00",
+  "modelo": "qwen3:4b",
+  "datos": "ficticios",
+  "entrada": {
+    "origen": "VLC",
+    "adultos": 2,
+    "presupuesto_grupo": 1000,
+    "objetivo": 1
+  },
+  "resultado": [
+    [
+      {
+        "total": 784,
+        "vuelo": 438,
+        "alojamiento": 346,
+        "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+        "ida": [
+          {
+            "flight_number": "SIM-011",
+            "airline": "Aerolínea ficticia",
+            "departure_airport": {
+              "id": "VLC",
+              "name": "Valencia",
+              "time": "2026-11-22 08:00"
+            },
+            "arrival_airport": {
+              "id": "MAD",
+              "name": "Madrid",
+              "time": "2026-11-22 10:00"
+            }
+          }
+        ],
+        "vuelta": [
+          {
+            "flight_number": "SIM-022",
+            "airline": "Aerolínea ficticia",
+            "departure_airport": {
+              "id": "MAD",
+              "name": "Madrid",
+              "time": "2026-11-25 16:00"
+            },
+            "arrival_airport": {
+              "id": "VLC",
+              "name": "Valencia",
+              "time": "2026-11-25 18:00"
+            }
+          }
+        ],
+        "impuestos_confirmados": true,
+        "enlace_vuelos": null,
+        "nota_alojamiento": 5.0,
+        "ciudad": "Madrid",
+        "aeropuerto": "MAD",
+        "ida_fecha": "2026-11-22",
+        "vuelta_fecha": "2026-11-25",
+        "salida": "VLC",
+        "preferencias_omitidas": []
+      }
+    ],
+    [
+      "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+      "[Destinos] Madrid · 2026-11-22 a 2026-11-25",
+      "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+      "[Transporte] Buscar vuelos por precio",
+      "[Transporte] Comprobar regreso de la salida 0",
+      "[Transporte] Continuar con las salidas ya elegidas",
+      "[Transporte → Coordinación] 2 vuelos completos comprobados.",
+      "[Transporte] Entregar los vuelos comprobados al coordinador",
+      "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+      "[Alojamiento] Buscar estancias por precio",
+      "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+      "[Alojamiento] Buscar estancias por valoración",
+      "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+      "[Coordinación] Coste comprobado: vuelo 438.00 € + estancia 346.00 € = 784.00 €.",
+      "[Coordinación] Se alcanzó el número de opciones válidas solicitado.",
+      "[Equipo] 4 consultas de datos y 10 decisiones de Qwen3."
+    ],
+    784,
+    1000,
+    "VLC",
+    2,
+    100,
+    "ddf611abbbc24016b6ecbd6e73412bcc"
+  ]
+}

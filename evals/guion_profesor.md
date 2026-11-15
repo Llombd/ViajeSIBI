@@ -1,3 +1,20 @@
+# Actualización para la demostración del equipo
+
+En **Planificar viaje** y **Demostraciones → Búsqueda simulada**, el sistema usa ahora
+cuatro roles de Qwen3. Cada uno tiene su propio historial y elige acciones entre las
+permitidas. Ejecutan sus turnos en el mismo modelo local.
+
+Enseña una búsqueda simulada y abre la traza. Señala el encargo de Coordinación,
+el destino elegido, las salidas comprobadas por Transporte y las estancias de Alojamiento.
+Después muestra cómo Coordinación recibe el coste conjunto y decide si revisar vuelos,
+estancias, fechas permitidas o ciudad. Se reutiliza lo ya comprobado al revisar un componente. Ese recorrido muestra colaboración. El precio final permite valorar el resultado.
+
+Los ejemplos y pilotos que siguen corresponden al planificador anterior. La comparación permite elegir el agente único frente al equipo nuevo. El laboratorio
+sigue usando el protocolo anterior. Hace falta evaluar el equipo nuevo con casos
+independientes antes de atribuirle una mejora frente al sistema previo.
+
+---
+
 # Cómo presentar ViajeSIBI sin enseñar código
 
 ## La idea en una frase

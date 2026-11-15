@@ -102,32 +102,7 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
         "arrival_id": destino, "outbound_date": ida.isoformat(), "return_date": vuelta.isoformat(),
         "sort_by": 2,
     }
-    vuelos = []
-    tokens = set()
-    registro = []
-    ida_resultados = consultar(ruta)
-    enlace_ida = enlace_vuelos(ida_resultados)
-    for opcion in opciones_vuelo(ida_resultados):
-        tramos_ida = opcion.get("flights") or []
-        token = opcion.get("departure_token")
-        if not tramos_ida or not token or token in tokens:
-            continue
-        llegada = hora_segmento(tramos_ida, "arrival_airport")
-        if not llegada or llegada.date() != ida:
-            continue
-        tokens.add(token)
-        try:
-            regresos = consultar({**ruta, "departure_token": token})
-        except ErrorConsultaOfertas:
-            regresos = {}
-            registro.append("SerpApi no pudo verificar la vuelta de una de las opciones de ida.")
-        for regreso in opciones_vuelo(regresos):
-            tramos_vuelta = regreso.get("flights") or []
-            precio = regreso.get("price")
-            if tramos_vuelta and importe_valido(precio):
-                vuelos.append((precio, tramos_ida, tramos_vuelta, enlace_vuelos(regresos) or enlace_ida))
-        if len(tokens) == 2:
-            break
+    vuelos, registro = consultar_vuelos(consultar, ruta, ida)
     if not vuelos:
         return [], [*registro, "Google Flights no devolvió una ida y vuelta utilizable entre las opciones consultadas."]
 
@@ -150,6 +125,55 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
         **comunes, "engine": "google_hotels", "q": ciudad,
         "check_in_date": ida.isoformat(), "check_out_date": vuelta.isoformat(),
     })
+    alojamientos = extraer_alojamientos(hoteles)
+    planes = combinar_ofertas(vuelos, alojamientos)
+    diagnostico["alojamientos"] = len(alojamientos)
+    if alojamientos:
+        diagnostico.update(estado="con_ofertas", alojamiento_minimo=min(hotel[0] for hotel in alojamientos))
+    registro.extend([
+        f"Transporte: {len(vuelos)} idas y vueltas con precio, entre las opciones de ida consultadas.",
+        f"Alojamiento: {sum(impuestos for _, _, impuestos, _ in alojamientos)} tarifas con impuestos y "
+        f"{sum(not impuestos for _, _, impuestos, _ in alojamientos)} con impuestos por confirmar.",
+        f"Coordinación: {sum(plan['total'] > presupuesto for plan in planes)} combinaciones superan el presupuesto según la tarifa publicada.",
+    ])
+    return planes[:3], registro
+
+
+
+def consultar_vuelos(consultar, ruta, ida, elegir=None):
+    vuelos = []
+    tokens = set()
+    registro = []
+    ida_resultados = consultar(ruta)
+    enlace_ida = enlace_vuelos(ida_resultados)
+    opciones = opciones_vuelo(ida_resultados)
+    if elegir:
+        opciones = elegir(opciones)
+    for opcion in opciones:
+        tramos_ida = opcion.get("flights") or []
+        token = opcion.get("departure_token")
+        if not tramos_ida or not token or token in tokens:
+            continue
+        llegada = hora_segmento(tramos_ida, "arrival_airport")
+        if not llegada or llegada.date() != ida:
+            continue
+        tokens.add(token)
+        try:
+            regresos = consultar({**ruta, "departure_token": token})
+        except ErrorConsultaOfertas:
+            regresos = {}
+            registro.append("SerpApi no pudo verificar la vuelta de una de las opciones de ida.")
+        for regreso in opciones_vuelo(regresos):
+            tramos_vuelta = regreso.get("flights") or []
+            precio = regreso.get("price")
+            if tramos_vuelta and importe_valido(precio):
+                vuelos.append((precio, tramos_ida, tramos_vuelta, enlace_vuelos(regresos) or enlace_ida))
+        if len(tokens) == 2:
+            break
+    return vuelos, registro
+
+
+def extraer_alojamientos(hoteles):
     alojamientos = []
     for hotel in hoteles.get("properties", []):
         tarifa = hotel.get("total_rate") or {}
@@ -159,6 +183,10 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
             precio = tarifa.get("extracted_display_price")
         if hotel.get("name") and importe_valido(precio):
             alojamientos.append((precio, hotel["name"], impuestos, hotel.get("overall_rating")))
+    return alojamientos
+
+
+def combinar_ofertas(vuelos, alojamientos):
     planes = [
         {"total": precio_vuelo + precio_hotel, "vuelo": precio_vuelo, "alojamiento": precio_hotel,
          "nombre": nombre, "ida": tramos_ida, "vuelta": tramos_vuelta, "impuestos_confirmados": impuestos,
@@ -167,13 +195,4 @@ def buscar_planes(consultar, origen, destino, ciudad, ida, vuelta, adultos, pres
         for precio_hotel, nombre, impuestos, nota in alojamientos
     ]
     planes.sort(key=lambda plan: (not plan["impuestos_confirmados"], plan["total"]))
-    diagnostico["alojamientos"] = len(alojamientos)
-    if alojamientos:
-        diagnostico.update(estado="con_ofertas", alojamiento_minimo=min(hotel[0] for hotel in alojamientos))
-    registro.extend([
-        f"Transporte: {len(vuelos)} idas y vueltas con precio, tras revisar {len(tokens)} opciones de ida.",
-        f"Alojamiento: {sum(impuestos for _, _, impuestos, _ in alojamientos)} tarifas con impuestos y "
-        f"{sum(not impuestos for _, _, impuestos, _ in alojamientos)} con impuestos por confirmar.",
-        f"Coordinación: {sum(plan['total'] > presupuesto for plan in planes)} combinaciones superan el presupuesto según la tarifa publicada.",
-    ])
-    return planes[:3], registro
+    return planes

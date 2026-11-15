@@ -10,6 +10,7 @@ from uuid import uuid4
 import streamlit as st
 
 from src.agent import ClienteOllama, ErrorOllama
+from src.comparar_equipo import comparar_un_agente_y_equipo
 from src.balance_comparacion import balance_comparacion
 from src.interfaz_aprendizaje import mostrar_aprendizaje
 from src.interfaz_evidencia import mostrar_evidencia
@@ -26,7 +27,14 @@ def guardar_clave_sesion():
 
 def mostrar_ofertas():
     st.title("🧳 Planificar viaje")
-    st.caption("Dinos de dónde sales y qué te apetece. El agente elige destinos y consulta ofertas reales de vuelo y alojamiento.")
+    st.caption("Un equipo de agentes busca destinos, vuelos y alojamiento según tus condiciones.")
+    with st.expander("Cómo trabaja el equipo"):
+        st.write("Coordinación reparte el trabajo. Destinos propone ciudades y fechas. "
+                 "Transporte comprueba vuelos. Alojamiento compara estancias con los vuelos observados. "
+                 "Cada rol usa Qwen3 con instrucciones e historial propios. "
+                 "El coordinador puede volver a vuelos o estancias del mismo destino, cambiar fechas permitidas o pedir otra ciudad. Se compara siempre el total y las decisiones aparecen en la traza.")
+        st.caption("La comparación y el laboratorio conservan su protocolo anterior de un planificador, "
+                   "para que sus resultados sigan siendo interpretables.")
     planificar, comparacion, demos, aprendizaje = st.tabs(
         ("Planificar viaje", "Comparar IA y agente", "Demostraciones", "Aprendizaje"),
         key="apartado_viajesibi", on_change="rerun",
@@ -36,7 +44,7 @@ def mostrar_ofertas():
             mostrar_formulario()
     elif comparacion.open:
         with comparacion:
-            st.info("Mismo Qwen3 y mismas ofertas: una lista decidida al principio frente a un agente que decide de nuevo después de cada resultado.")
+            st.info("Mismo Qwen3 y las mismas ofertas. Compara un agente con herramientas frente al equipo de cuatro agentes.")
             st.caption("Esta comparación mide el valor de revisar la búsqueda. No demuestra superioridad frente a todas las IA o buscadores.")
             mostrar_formulario(comparar=True)
     elif aprendizaje.open:
@@ -65,6 +73,10 @@ def mostrar_ofertas():
 
 
 def mostrar_formulario(simulada=False, comparar=False):
+    comparar_equipo = comparar and st.radio(
+        "Qué métodos comparar", ("Un agente y equipo de cuatro", "Lista fija y planificador anterior"),
+        horizontal=True,
+    ) == "Un agente y equipo de cuatro"
     clave = os.getenv("SERPAPI_API_KEY")
     if not simulada and not clave:
         with st.container(border=True):
@@ -169,13 +181,16 @@ def mostrar_formulario(simulada=False, comparar=False):
             st.caption("La experiencia guía el orden de candidatos. Se consultarán precios de nuevo; "
                        "la validación previa no garantiza este viaje.")
     if comparar:
-        st.caption("Ambos métodos usan la misma primera propuesta y los mismos filtros. "
-                   "Se mide si encuentran un plan dentro del presupuesto base con el aeropuerto elegido.")
+        st.caption("Ambos métodos respetan origen, fechas, presupuesto base y filtros. "
+                   "Cada uno dispone de hasta 12 consultas de datos y tres combinaciones de destino y fechas. "
+                   "El equipo añade decisiones de coordinación; se cuentan todas.")
     buscar = st.button("Comparar estrategias" if comparar else "Encontrar opciones", type="primary")
     resultado_clave = (
         ("comparacion_simulada" if simulada else "comparacion_real")
         if comparar else ("resultado_simulado" if simulada else "resultado_con_aprendizaje")
     )
+    if comparar_equipo:
+        resultado_clave += "_equipo"
     if buscar:
         st.session_state.pop(resultado_clave, None)
         if tipos == []:
@@ -212,7 +227,8 @@ def mostrar_formulario(simulada=False, comparar=False):
 
                 if comparar:
                     gustos = f"Conservar: {imprescindibles}. Flexibles: {preferencias}"
-                    resultados = comparar_estrategias(
+                    comparar_metodos = comparar_un_agente_y_equipo if comparar_equipo else comparar_estrategias
+                    resultados = comparar_metodos(
                         ClienteOllama(), consultar_filtrado, origen, fechas, gustos, adultos, presupuesto,
                     )
                     resultado = resultados, presupuesto, uuid4().hex
@@ -220,7 +236,7 @@ def mostrar_formulario(simulada=False, comparar=False):
                     planes, registro, primer_total = planificar_con_alternativas(
                         ClienteOllama(), consultar_filtrado, origen, fechas, preferencias, adultos, presupuesto,
                         margen=margen, origen_fijo=origen_fijo, imprescindibles=imprescindibles,
-                        experiencia=experiencia_aprendida, objetivo_opciones=objetivo_opciones,
+                        experiencia=experiencia_aprendida, equipo=True, objetivo_opciones=objetivo_opciones,
                     )
                     resultado = planes, registro, primer_total, presupuesto, origen, adultos, margen, uuid4().hex
         except (ErrorOfertas, ErrorOllama) as error:
@@ -261,9 +277,14 @@ def mostrar_comparacion(resultados, presupuesto, simulada=True):
         "Llamadas a Qwen3": m["llamadas_modelo"] if m["llamadas_modelo"] is not None else "No registradas",
         "Revisiones inválidas": m["revisiones_invalidas"] if m["revisiones_invalidas"] is not None else "No registradas",
     } for m in balance["metodos"]])
-    st.caption("Cada método cuenta la propuesta inicial compartida como una llamada; las revisiones son llamadas adicionales.")
-    st.caption("Ambos usan Qwen3 y las mismas herramientas. La IA con plan inicial mantiene sus propuestas; "
-               "el agente puede revisarlas al conocer los resultados. Estas cifras describen esta ejecución, no todos los viajes.")
+    st.caption("Se cuentan las decisiones del modelo. En el equipo se suman las de los cuatro roles.")
+    es_equipo = resultados[1][0] == "Equipo de cuatro agentes"
+    st.caption(
+        "Un agente con herramientas y el equipo pueden revisar sus decisiones. El equipo reparte "
+        "la búsqueda entre cuatro roles. Estas cifras describen esta ejecución."
+        if es_equipo else
+        "La lista fija mantiene sus propuestas; el planificador anterior puede revisarlas al conocer resultados."
+    )
     evitadas = [m["hoteles_evitados"] for m in balance["metodos"]]
     if any(evitadas):
         st.write(f"Consultas de hotel evitadas porque el vuelo ya superaba el máximo: "
@@ -417,7 +438,12 @@ def mostrar_resultado(resultado, demostracion=False, ficticia=False):
                      f"la primera propuesta ({primer_total:.2f} €).")
         else:
             st.write("La primera propuesta ya era la más económica entre las consultadas.")
-    with st.expander("Qué se consultó y cómo se eligieron las combinaciones", expanded=not validos):
+    trabajo_equipo = any(paso.startswith("[Coordinación]") for paso in registro)
+    if trabajo_equipo:
+        st.markdown("**Trabajo del equipo de agentes**")
+        st.caption("Cada línea muestra la decisión de un especialista o el informe que recibió Coordinación.")
+    with st.expander("Qué se consultó y cómo se eligieron las combinaciones",
+                     expanded=trabajo_equipo or not validos):
         for paso in registro:
             st.write(paso)
 

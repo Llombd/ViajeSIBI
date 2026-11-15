@@ -1,0 +1,1075 @@
+{
+  "fecha_utc": "2026-11-15T20:16:24.773819+00:00",
+  "modelo": "qwen3:4b",
+  "datos": "ficticios",
+  "limites": {
+    "consultas_datos": 12,
+    "destinos_fechas": 3
+  },
+  "casos": [
+    {
+      "origen": "VLC",
+      "presupuesto": 600,
+      "gustos": "cultura",
+      "un_agente": {
+        "total": 470,
+        "viable": true,
+        "consultas": 12,
+        "llamadas_modelo": 3,
+        "segundos": 15.68,
+        "planes": [
+          {
+            "total": 470,
+            "vuelo": 368,
+            "alojamiento": 102,
+            "nombre": "Hostales y albergues · Barrio exterior · Sevilla (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "SVQ",
+                  "name": "Sevilla",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "SVQ",
+                  "name": "Sevilla",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Sevilla",
+            "aeropuerto": "SVQ",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 500,
+            "vuelo": 290,
+            "alojamiento": 210,
+            "nombre": "Hostales y albergues · Barrio exterior · Barcelona (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Barcelona",
+            "aeropuerto": "BCN",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 618,
+            "vuelo": 288,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Madrid · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 288.00 € de vuelo + 330.00 € de estancia = 618.00 €.",
+          "Diagnóstico comprobado: El total publicado supera el presupuesto en 18.00 €. El componente de mayor coste es alojamiento.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Barcelona · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 132 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 290.00 € de vuelo + 210.00 € de estancia = 500.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Sevilla · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 130 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 368.00 € de vuelo + 102.00 € de estancia = 470.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones."
+        ]
+      },
+      "equipo": {
+        "total": 500,
+        "viable": true,
+        "consultas": 12,
+        "llamadas_modelo": 21,
+        "segundos": 157.39,
+        "planes": [
+          {
+            "total": 500,
+            "vuelo": 290,
+            "alojamiento": 210,
+            "nombre": "Hostales y albergues · Barrio exterior · Barcelona (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-09 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-09 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-12 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-12 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Barcelona",
+            "aeropuerto": "BCN",
+            "ida_fecha": "2027-03-09",
+            "vuelta_fecha": "2027-03-12"
+          },
+          {
+            "total": 618,
+            "vuelo": 288,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 618,
+            "vuelo": 288,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-09 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-09 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-12 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-12 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-09",
+            "vuelta_fecha": "2027-03-12"
+          }
+        ],
+        "traza": [
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Madrid · 2027-03-02 a 2027-03-05",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 288.00 € + estancia 330.00 € = 618.00 €.",
+          "[Coordinación] La combinación supera el máximo autorizado; se pueden revisar vuelos, estancia, destino o fechas permitidas.",
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Madrid · 2027-03-09 a 2027-03-12",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 288.00 € + estancia 330.00 € = 618.00 €.",
+          "[Coordinación] La combinación supera el máximo autorizado; se pueden revisar vuelos, estancia, destino o fechas permitidas.",
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Barcelona · 2027-03-09 a 2027-03-12",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 290.00 € + estancia 210.00 € = 500.00 €.",
+          "[Coordinación] Se alcanzó el límite; se conservan los planes comprobados.",
+          "[Equipo] 12 consultas de datos y 21 decisiones de Qwen3."
+        ]
+      }
+    },
+    {
+      "origen": "LEN",
+      "presupuesto": 500,
+      "gustos": "gastronomía",
+      "equipo": {
+        "total": 584,
+        "viable": false,
+        "consultas": 12,
+        "llamadas_modelo": 21,
+        "segundos": 157.41,
+        "planes": [
+          {
+            "total": 584,
+            "vuelo": 314,
+            "alojamiento": 270,
+            "nombre": "Hostales y albergues · Barrio exterior · Valencia (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-09 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-09 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-12 16:00"
+                },
+                "arrival_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-12 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Valencia",
+            "aeropuerto": "VLC",
+            "ida_fecha": "2027-03-09",
+            "vuelta_fecha": "2027-03-12"
+          },
+          {
+            "total": 606,
+            "vuelo": 276,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 606,
+            "vuelo": 276,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-09 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-09 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-12 16:00"
+                },
+                "arrival_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-12 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-09",
+            "vuelta_fecha": "2027-03-12"
+          }
+        ],
+        "traza": [
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Madrid · 2027-03-02 a 2027-03-05",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 276.00 € + estancia 330.00 € = 606.00 €.",
+          "[Coordinación] La combinación supera el máximo autorizado; se pueden revisar vuelos, estancia, destino o fechas permitidas.",
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Madrid · 2027-03-09 a 2027-03-12",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 276.00 € + estancia 330.00 € = 606.00 €.",
+          "[Coordinación] La combinación supera el máximo autorizado; se pueden revisar vuelos, estancia, destino o fechas permitidas.",
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Valencia · 2027-03-09 a 2027-03-12",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 314.00 € + estancia 270.00 € = 584.00 €.",
+          "[Coordinación] La combinación supera el máximo autorizado; se pueden revisar vuelos, estancia, destino o fechas permitidas.",
+          "[Coordinación] Se alcanzó el límite; se conservan los planes comprobados.",
+          "[Equipo] 12 consultas de datos y 21 decisiones de Qwen3."
+        ]
+      },
+      "un_agente": {
+        "total": 488,
+        "viable": true,
+        "consultas": 12,
+        "llamadas_modelo": 3,
+        "segundos": 21.43,
+        "planes": [
+          {
+            "total": 488,
+            "vuelo": 278,
+            "alojamiento": 210,
+            "nombre": "Hostales y albergues · Barrio exterior · Barcelona (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Barcelona",
+            "aeropuerto": "BCN",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 584,
+            "vuelo": 314,
+            "alojamiento": 270,
+            "nombre": "Hostales y albergues · Barrio exterior · Valencia (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Valencia",
+            "aeropuerto": "VLC",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 606,
+            "vuelo": 276,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "LEN",
+                  "name": "León",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Madrid · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 276.00 € de vuelo + 330.00 € de estancia = 606.00 €.",
+          "Diagnóstico comprobado: El total publicado supera el presupuesto en 106.00 €. El componente de mayor coste es alojamiento.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Buscar otra opción para comparar el coste de alojamiento.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Valencia · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 156 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 314.00 € de vuelo + 270.00 € de estancia = 584.00 €.",
+          "Diagnóstico comprobado: El total publicado supera el presupuesto en 84.00 €. El componente de mayor coste es vuelo.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Barcelona · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 154 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 278.00 € de vuelo + 210.00 € de estancia = 488.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones."
+        ]
+      }
+    },
+    {
+      "origen": "BIO",
+      "presupuesto": 700,
+      "gustos": "museos",
+      "un_agente": {
+        "total": 478,
+        "viable": true,
+        "consultas": 12,
+        "llamadas_modelo": 3,
+        "segundos": 16.94,
+        "planes": [
+          {
+            "total": 478,
+            "vuelo": 268,
+            "alojamiento": 210,
+            "nombre": "Hostales y albergues · Barrio exterior · Barcelona (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BCN",
+                  "name": "Barcelona",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Barcelona",
+            "aeropuerto": "BCN",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 574,
+            "vuelo": 304,
+            "alojamiento": 270,
+            "nombre": "Hostales y albergues · Barrio exterior · Valencia (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Valencia",
+            "aeropuerto": "VLC",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 596,
+            "vuelo": 266,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          }
+        ],
+        "traza": [
+          "Consulta elegida por Qwen3: Madrid · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 132 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 266.00 € de vuelo + 330.00 € de estancia = 596.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Comparar otro total conservando las opciones ya comprobadas.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Valencia · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 130 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 304.00 € de vuelo + 270.00 € de estancia = 574.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Objetivo elegido por Qwen3 (no garantiza el resultado): Continuar con la siguiente propuesta del plan inicial.",
+          "Se conservan las propuestas pendientes. No se inventa una decisión del agente.",
+          "Consulta elegida por Qwen3: Barcelona · 02/03 a 05/03.",
+          "Transporte: 4 idas y vueltas con precio, entre las opciones de ida consultadas.",
+          "Alojamiento: 39 tarifas con impuestos y 0 con impuestos por confirmar.",
+          "Coordinación: 85 combinaciones superan el presupuesto según la tarifa publicada.",
+          "Mejor combinación comprobada: 268.00 € de vuelo + 210.00 € de estancia = 478.00 €.",
+          "Diagnóstico comprobado: El total publicado está dentro del presupuesto; se pueden comparar otras opciones.",
+          "Se alcanzó el número de opciones comprobadas solicitado; no se gastan más consultas."
+        ]
+      },
+      "equipo": {
+        "total": 574,
+        "viable": true,
+        "consultas": 12,
+        "llamadas_modelo": 21,
+        "segundos": 169.41,
+        "planes": [
+          {
+            "total": 574,
+            "vuelo": 304,
+            "alojamiento": 270,
+            "nombre": "Hostales y albergues · Barrio exterior · Valencia (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-09 16:00"
+                },
+                "arrival_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-09 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "VLC",
+                  "name": "Valencia",
+                  "time": "2027-03-12 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-12 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Valencia",
+            "aeropuerto": "VLC",
+            "ida_fecha": "2027-03-09",
+            "vuelta_fecha": "2027-03-12"
+          },
+          {
+            "total": 596,
+            "vuelo": 266,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-02 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-02 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-05 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-05 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-02",
+            "vuelta_fecha": "2027-03-05"
+          },
+          {
+            "total": 596,
+            "vuelo": 266,
+            "alojamiento": 330,
+            "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+            "ida": [
+              {
+                "flight_number": "SIM-012",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-09 16:00"
+                },
+                "arrival_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-09 18:00"
+                }
+              }
+            ],
+            "vuelta": [
+              {
+                "flight_number": "SIM-022",
+                "airline": "Aerolínea ficticia",
+                "departure_airport": {
+                  "id": "MAD",
+                  "name": "Madrid",
+                  "time": "2027-03-12 16:00"
+                },
+                "arrival_airport": {
+                  "id": "BIO",
+                  "name": "Bilbao",
+                  "time": "2027-03-12 18:00"
+                }
+              }
+            ],
+            "impuestos_confirmados": true,
+            "enlace_vuelos": null,
+            "nota_alojamiento": 5.0,
+            "ciudad": "Madrid",
+            "aeropuerto": "MAD",
+            "ida_fecha": "2027-03-09",
+            "vuelta_fecha": "2027-03-12"
+          }
+        ],
+        "traza": [
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Madrid · 2027-03-02 a 2027-03-05",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 266.00 € + estancia 330.00 € = 596.00 €.",
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Madrid · 2027-03-09 a 2027-03-12",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 266.00 € + estancia 330.00 € = 596.00 €.",
+          "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+          "[Destinos] Valencia · 2027-03-09 a 2027-03-12",
+          "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+          "[Transporte] Buscar vuelos por precio",
+          "[Transporte] Comparar los regresos de las dos primeras salidas",
+          "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+          "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+          "[Alojamiento] Buscar estancias por precio",
+          "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+          "[Coordinación] Coste comprobado: vuelo 304.00 € + estancia 270.00 € = 574.00 €.",
+          "[Coordinación] Se alcanzó el límite; se conservan los planes comprobados.",
+          "[Equipo] 12 consultas de datos y 21 decisiones de Qwen3."
+        ]
+      }
+    }
+  ],
+  "codigo_sha256": {
+    "src/equipo_viaje.py": "9acdcbb56161b3ba2f51482a6514707582eeea1f5cae9e09fe64288b12136a4d",
+    "src/seleccion_viaje.py": "cc10dffe8ced6b0915618bf4098637235c34c72265a3f4c9474a890c0b430ea0",
+    "src/demo_ofertas.py": "ae2d24f9ba9119d211f162a394e09c1e0120d93ab6b10a144257acc5bc4af836"
+  }
+}

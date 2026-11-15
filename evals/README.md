@@ -254,3 +254,84 @@ La regla es de Python y no se atribuye al razonamiento del modelo.
 La suite tras esta revisión pasa **201 pruebas, sin omisiones**. Las comprobaciones
 de interfaz se hacen con Streamlit AppTest, sin APIs. La inspección visual por navegador
 no pudo completarse porque la herramienta de navegador agotó su tiempo de espera.
+
+## Equipo de cuatro agentes — 15 de noviembre
+
+La planificación principal y la búsqueda simulada utilizan Coordinación, Destinos,
+Transporte y Alojamiento, con Qwen3 y sus historiales separados. El coordinador recibe
+los resultados de cada especialista antes de decidir el siguiente encargo.
+Transporte decide la ordenación y las salidas cuyo regreso consulta; Alojamiento decide
+buscar por precio o valoración, dentro de los filtros ya aplicados.
+
+En la comprobación integrada [resultado_equipo_2026-11-15.json](resultado_equipo_2026-11-15.json)
+se ejecutó el formulario con Qwen3 real y el catálogo ficticio, sin SerpApi. El encargo
+fue Valencia, dos adultos, 1.000 € de grupo y una opción válida. El equipo encontró
+Madrid por 784 € (438 € de vuelo y 346 € de estancia), con cuatro consultas de datos
+y diez decisiones del modelo. La traza identifica los cuatro roles.
+
+La prueba automatizada de recuperación obliga a revisar un plan de 900 € (200 € de
+vuelo y 700 € de hotel) y encuentra otro de 650 € (350 € y 300 €), con 800 € de
+presupuesto. Usa decisiones simuladas para comprobar la transferencia de los costes
+entre agentes. La prueba integrada demuestra ejecución del equipo con Qwen3, no
+superioridad frente al planificador anterior. La comparación histórica mantiene su
+protocolo y sus resultados no deben atribuirse al equipo nuevo.
+
+### Revisión del ciclo de decisiones
+
+El coordinador puede pedir primero estancia o transporte, revisar un componente del
+mismo viaje conservando el otro, o pedir al agente de destinos otra ciudad o unas fechas
+permitidas distintas. Se recombinan las ofertas ya consultadas. El objetivo económico es
+el total del viaje; el orden de consulta no fija para siempre un presupuesto al alojamiento.
+
+Las pruebas automatizadas cubren cambiar la estancia sin repetir vuelos, cambiar vuelos
+sin repetir la estancia y volver a Oporto en otra fecha permitida. El coordinador no puede
+cerrar por decisión propia sin opciones válidas mientras queden revisiones autorizadas
+y presupuesto de consultas. Los límites y las respuestas inválidas pueden cerrar el ciclo.
+
+En la repetición con Qwen3 real y ofertas ficticias, el coordinador eligió Madrid. Transporte
+comprobó ambas salidas y Alojamiento consultó dos ordenaciones. El mejor total fue 598 €
+con un presupuesto de 600 €, cinco consultas de datos y once decisiones del modelo.
+La evidencia completa está en [resultado_equipo_ciclico_2026-11-15.json](resultado_equipo_ciclico_2026-11-15.json).
+En esa ejecución no fue necesario cambiar de destino después de obtener el total válido.
+
+## Mejora del equipo y comparación con un agente — 15 de noviembre
+
+Se fijaron antes de revisar la eficiencia tres encargos: Valencia con 600 €, León con
+500 € y Bilbao con 700 €, para dos adultos y tres noches, con dos ventanas de marzo.
+Cada estrategia dispone de doce consultas de datos y tres combinaciones de destino y
+fechas. El planificador único usa las herramientas y también puede revisar sus decisiones.
+El equipo dispone además de decisiones separadas para transporte y alojamiento.
+Esta comparación evalúa el conjunto de cambios de organización y consultas, no aísla
+el número de agentes como única causa.
+
+| Origen | Equipo previo | Equipo revisado | Agente único | Decisiones equipo antes / después | Consultas equipo antes / después |
+| --- | ---: | ---: | ---: | --- | --- |
+| Valencia | 668 € | 500 € | 470 € | 25 / 21 | 9 / 12 |
+| León | 656 € | 584 € | 488 € | 25 / 21 | 8 / 12 |
+| Bilbao | 646 € | 574 € | 478 € | 25 / 21 | 9 / 12 |
+
+El equipo pasó de resolver uno a dos encargos dentro del presupuesto. El agente único
+resolvió los tres. Ambos ensayos del equipo respetan el mismo máximo de consultas.
+La mejora del equipo reduce decisiones y aprovecha más consultas de ofertas, pero no
+supera al agente único en estos casos. También se registran los tiempos, que dependen de
+la carga del Mac y no se interpretan como una medida independiente de rapidez.
+
+Los resultados y las trazas completos están en
+[versión previa](resultado_equipo_antes_2026-11-15.json) y
+[versión revisada](resultado_equipo_mejora_2026-11-15.json).
+Después de esta medición se priorizó explorar ciudades no visitadas, conservando las otras
+fechas como alternativas autorizadas, y se redujo el contexto repetido enviado al modelo.
+Estas revisiones posteriores no se atribuyen a los resultados de la tabla.
+
+La pestaña **Comparar IA y agente** permite ejecutar el equipo actual contra un agente con
+herramientas. La opción del protocolo anterior se mantiene para reproducir informes antiguos.
+La tabla informa de precios, viajes válidos, consultas y decisiones de Qwen3 por método.
+
+La comprobación final de una sola búsqueda, posterior a esas revisiones, está en
+[resultado_equipo_final_2026-11-15.json](resultado_equipo_final_2026-11-15.json).
+Desde Valencia con 600 € encontró un viaje de 570 €, con 12 consultas y 23 decisiones,
+en 84,41 segundos. Es peor que los 500 € de la revisión intermedia y que los 470 €
+del agente único en la batería. La traza muestra que Qwen3 volvió a repetir Madrid
+en otra fecha pese a recibir la prioridad de explorar otras ciudades. Por tanto,
+esa prioridad de exploración no ha demostrado una mejora estable. Se conserva el
+resultado desfavorable junto con los demás informes.

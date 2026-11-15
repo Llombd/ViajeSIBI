@@ -7,12 +7,13 @@ def medir_resultado(fila, presupuesto):
     total = min(confirmados, default=None)
     consultas = (sum(i["consultas_proveedor"] for i in intentos)
                  if intentos and all("consultas_proveedor" in i for i in intentos) else None)
+    equipo = intentos[0].get("medicion_equipo") if intentos else None
     return {
         "metodo": nombre, "total": total,
         "viable": total is not None and total <= presupuesto,
         "consultas": consultas,
         # Cada método recibe la misma propuesta inicial (una llamada compartida).
-        "llamadas_modelo": (1 + sum(i["llamadas_revision"] for i in intentos)
+        "llamadas_modelo": equipo["llamadas_modelo"] if equipo else (1 + sum(i["llamadas_revision"] for i in intentos)
                              if intentos and all("llamadas_revision" in i for i in intentos) else None),
         "revisiones_invalidas": (sum(i.get("revision_estado") == "invalida" for i in intentos)
                                   if intentos and all("llamadas_revision" in i for i in intentos) else None),
@@ -46,5 +47,15 @@ def balance_comparacion(resultados, presupuesto):
     else:
         titulo = "Ninguno consiguió un viaje con total confirmado dentro del presupuesto."
         categoria = "Ninguno consiguió un viaje confirmado"
+    if agente["metodo"] == "Equipo de cuatro agentes":
+        categoria = (categoria.replace("el agente", "el equipo")
+                     .replace("la lista", "el agente único")
+                     .replace("agente más barato", "equipo más barato")
+                     .replace("lista más barata", "agente único más barato"))
+        titulo = (titulo.replace("El agente encontró", "El equipo encontró")
+                  .replace("el agente no", "el equipo no")
+                  .replace("del agente", "del equipo")
+                  .replace("La lista inicial", "El agente único")
+                  .replace("la lista inicial", "el agente único"))
     return {"titulo": titulo, "categoria": categoria, "ahorro": ahorro,
             "metodos": [fija, agente]}

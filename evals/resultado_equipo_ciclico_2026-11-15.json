@@ -1,0 +1,72 @@
+{
+  "fecha_utc": "2026-11-15T19:22:22.017566+00:00",
+  "modelo": "qwen3:4b",
+  "datos": "ficticios",
+  "presupuesto_grupo": 600,
+  "origen": "VLC",
+  "planes": [
+    {
+      "total": 598,
+      "vuelo": 268,
+      "alojamiento": 330,
+      "nombre": "Hostales y albergues · Barrio exterior · Madrid (ficticio)",
+      "ida": [
+        {
+          "flight_number": "SIM-012",
+          "airline": "Aerolínea ficticia",
+          "departure_airport": {
+            "id": "VLC",
+            "name": "Valencia",
+            "time": "2027-02-01 16:00"
+          },
+          "arrival_airport": {
+            "id": "MAD",
+            "name": "Madrid",
+            "time": "2027-02-01 18:00"
+          }
+        }
+      ],
+      "vuelta": [
+        {
+          "flight_number": "SIM-022",
+          "airline": "Aerolínea ficticia",
+          "departure_airport": {
+            "id": "MAD",
+            "name": "Madrid",
+            "time": "2027-02-04 16:00"
+          },
+          "arrival_airport": {
+            "id": "VLC",
+            "name": "Valencia",
+            "time": "2027-02-04 18:00"
+          }
+        }
+      ],
+      "impuestos_confirmados": true,
+      "enlace_vuelos": null,
+      "nota_alojamiento": 5.0,
+      "ciudad": "Madrid",
+      "aeropuerto": "MAD",
+      "ida_fecha": "2027-02-01",
+      "vuelta_fecha": "2027-02-04"
+    }
+  ],
+  "traza": [
+    "[Coordinación] Pedir a Destinos otra ciudad o fecha",
+    "[Destinos] Madrid · 2027-02-01 a 2027-02-04",
+    "[Coordinación] Pedir a Transporte vuelos para el destino actual",
+    "[Transporte] Buscar vuelos por precio",
+    "[Transporte] Comprobar regreso de la salida 0",
+    "[Transporte] Comprobar regreso de la salida 1",
+    "[Transporte → Coordinación] 4 vuelos completos comprobados.",
+    "[Transporte] Entregar los vuelos comprobados al coordinador",
+    "[Coordinación] Pedir a Alojamiento una estancia para completar el viaje",
+    "[Alojamiento] Buscar estancias por precio",
+    "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+    "[Alojamiento] Buscar estancias por valoración",
+    "[Alojamiento → Coordinación] 39 estancias comprobadas.",
+    "[Coordinación] Coste comprobado: vuelo 268.00 € + estancia 330.00 € = 598.00 €.",
+    "[Coordinación] Cerrar con las ofertas ya comprobadas",
+    "[Equipo] 5 consultas de datos y 11 decisiones de Qwen3."
+  ]
+}

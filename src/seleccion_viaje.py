@@ -332,13 +332,27 @@ def explorar_ofertas(consultar, origen, propuestas, adultos, presupuesto, replan
 
 def planificar_con_alternativas(
     cliente, consultar, origen, fechas, preferencias, adultos, presupuesto, *,
-    margen=None, origen_fijo=False, imprescindibles="", experiencia=(), objetivo_opciones=3,
+    margen=None, origen_fijo=False, imprescindibles="", experiencia=(), objetivo_opciones=3, equipo=False,
 ):
     """Conserva las condiciones originales y etiqueta cualquier cambio de búsqueda."""
     revisados = {}
+    consultas_equipo = 0
     margen = min(50 * adultos, 100) if margen is None else margen
 
     def buscar(salida, gustos, maximo, cambios=()):
+        nonlocal consultas_equipo
+        if equipo:
+            from src.equipo_viaje import EquipoViaje
+            if consultas_equipo >= 12:
+                return [], ["[Coordinación] Se agotó el máximo de 12 consultas para toda la búsqueda."], None
+            agentes = EquipoViaje(cliente, consultar, max_consultas=12 - consultas_equipo)
+            criterios = {"conservar": imprescindibles, "flexibles": gustos}
+            planes, pasos, primero = agentes.planificar(
+                salida, fechas, criterios, adultos, presupuesto, margen=margen,
+                intentos=maximo, objetivo=objetivo_opciones, experiencia=experiencia,
+            )
+            consultas_equipo += agentes.consultas
+            return [dict(plan, salida=salida, preferencias_omitidas=cambios) for plan in planes], pasos, primero
         observaciones = revisados.setdefault(salida, [])
 
         def proponer(datos):

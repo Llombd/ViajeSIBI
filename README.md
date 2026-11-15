@@ -1,5 +1,39 @@
 # Agente de recomendación de viajes
 
+## Actualización del 15 de noviembre de 2026
+
+La planificación de viajes reales y la búsqueda simulada usan ahora un equipo de cuatro
+agentes. Todos ejecutan Qwen3 local con instrucciones, decisiones estructuradas e historiales
+separados. Trabajan por turnos para ajustarse al Mac de 8 GB.
+
+- **Coordinación** elige a qué especialista encargar el siguiente trabajo. Recibe los precios
+  de transporte y estancia y puede pedir otro destino cuando el total no encaja.
+- **Destinos** elige una ciudad y unas fechas entre las autorizadas, usando los gustos y
+  los resultados de consultas anteriores.
+- **Transporte** decide si buscar por precio o duración y qué salidas consultar con su regreso.
+  Puede revisar su ordenación una vez.
+- **Alojamiento** recibe el presupuesto restante y elige buscar por precio o por valoración.
+  Puede probar otra ordenación o entregar sus resultados.
+
+Python conserva las validaciones y combina exclusivamente precios devueltos por las
+herramientas. Cada equipo tiene un máximo de 25 decisiones del modelo y la planificación
+completa comparte un máximo de 12 consultas de ofertas, incluidos los intentos con otras
+condiciones. Al cerrar se conservan los planes completos ya comprobados. Las preferencias
+obligatorias orientan la selección, pero todavía no se verifican con datos sobre los lugares.
+
+En la traza se identifica cada agente y los informes enviados al coordinador. Abre
+**Demostraciones → Búsqueda simulada**, rellena el formulario y ejecuta la búsqueda para
+verlos trabajar con ofertas ficticias sin gastar SerpApi. Necesitas Ollama activo.
+
+La pestaña de comparación permite medir **Un agente y equipo de cuatro** con los mismos
+datos, condiciones y máximo de doce consultas de ofertas. El agente único también puede
+replantear su búsqueda. Se muestran las llamadas adicionales al modelo de cada estrategia.
+La opción **Lista fija y planificador anterior** y los informes previos conservan su protocolo.
+El laboratorio de aprendizaje todavía evalúa ese planificador anterior. Tener cuatro agentes
+por sí solo no prueba una mejora de precio o de eficiencia. La suite cubre la colaboración con modelos simulados y la recuperación
+cuando una estancia encarece un destino.
+
+
 Proyecto universitario de IA agéntica: un asistente que interpreta preferencias en lenguaje natural, decide qué consultar y recomienda hasta tres destinos apoyándose en sus resultados.
 
 **Estado:** aplicación web local de planificación con Qwen3 y ofertas de SerpApi. El modo terminal conserva el catálogo simulado y funciona sin claves.
@@ -608,3 +642,25 @@ Las ejecuciones con Qwen3 real están documentadas por separado en `evals/`; no 
 ## Diario de seguimiento
 
 [Informe semanal y registro diario del 9 al 13 de noviembre de 2026](output/pdf/Diario_semanal_SIBI_9_13_noviembre_2026.pdf).
+
+
+El ciclo del equipo admite revisar el transporte conservando las estancias ya consultadas,
+o revisar las estancias conservando los vuelos, además de cambiar de ciudad o de fechas
+permitidas. Se recombinan las ofertas verificadas y se conserva la mejor combinación de
+cada destino y periodo. Encontrar una opción válida permite al coordinador seguir buscando
+una mejor dentro de los límites. Las revisiones dentro de una búsqueda usan los resultados
+recientes; el aprendizaje persistente sigue siendo una función distinta del laboratorio.
+
+
+### Eficiencia del equipo
+
+Cada especialista devuelve el resultado al coordinador tras una consulta. Otra ordenación
+requiere un nuevo encargo, para que se valore antes el coste conjunto. Transporte puede
+comparar dos regresos en una decisión, sin fijar una salida cuyo regreso no se ha consultado.
+Los historiales completos se conservan en el proceso, y se envía al modelo el informe actual con todas las observaciones necesarias para
+reducir el contexto repetido.
+
+La evaluación reproducible se ejecuta con
+`.venv/bin/python -B -m evals.evaluar_equipo --salida /tmp/equipo.json`.
+Usa Qwen3 real y ofertas ficticias y registra precios, viajes válidos, consultas, decisiones,
+tiempos y trazas. Los casos están fijados en el código antes de medir los cambios.

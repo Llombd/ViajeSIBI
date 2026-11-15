@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from test_equipo_viaje import modelo_equipo
 
 if importlib.util.find_spec("streamlit"):
     from streamlit.testing.v1 import AppTest
@@ -19,7 +20,7 @@ class TestInterfaz(unittest.TestCase):
                                           "VIAJESIBI_DB": str(Path(temporal.name) / "perfil.sqlite3")})
         entorno.start()
         self.addCleanup(entorno.stop)
-        app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
+        app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py"), default_timeout=10).run()
         self.assertFalse(app.exception)
         return app
 
@@ -47,7 +48,7 @@ class TestInterfaz(unittest.TestCase):
         app.selectbox[0].set_value("VLC")
         with (
             patch("src.agent.ClienteOllama.consultar_json",
-                  return_value='{"busquedas":[{"aeropuerto":"OPO","fechas":0}]}'),
+                  side_effect=modelo_equipo),
             patch("src.interfaz_ofertas.consultar_serpapi", return_value={}) as consultar,
         ):
             app.button[0].click().run()
@@ -134,11 +135,11 @@ class TestInterfaz(unittest.TestCase):
         with (
             patch("src.interfaz_ofertas.consultar_serpapi") as consultar,
             patch("src.agent.ClienteOllama.consultar_json",
-                  return_value='{"busquedas":[{"aeropuerto":"OPO","fechas":0}]}') as modelo,
+                  side_effect=modelo_equipo) as modelo,
         ):
             app.button[0].click().run()
             consultar.assert_not_called()
-            self.assertEqual(modelo.call_count, 2)  # Revisa el resultado aun cuando ya hay precio válido.
+            self.assertGreaterEqual(modelo.call_count, 4)
         self.assertFalse(app.exception)
         self.assertTrue(any("Hostales y albergues" in elemento.value for elemento in app.markdown))
         self.assertFalse(any(campo.label == "Clave de SerpApi" for campo in app.text_input))
@@ -147,6 +148,7 @@ class TestInterfaz(unittest.TestCase):
         app = self.abrir("clave-ficticia")
         app.session_state["apartado_viajesibi"] = "Comparar IA y agente"
         app.run()
+        app.radio[0].set_value("Lista fija y planificador anterior").run()
         app.selectbox[0].set_value("VLC")
         next(campo for campo in app.number_input if campo.label.startswith("Presupuesto por persona")).set_value(100)
         with (
@@ -174,6 +176,7 @@ class TestInterfaz(unittest.TestCase):
         app = self.abrir("clave-ficticia")
         app.session_state["apartado_viajesibi"] = "Comparar IA y agente"
         app.run()
+        app.radio[0].set_value("Lista fija y planificador anterior").run()
         app.selectbox[0].set_value("VLC")
         with (
             patch("src.interfaz_ofertas.consultar_serpapi", return_value={}) as api,
@@ -193,6 +196,7 @@ class TestInterfaz(unittest.TestCase):
         app.session_state["apartado_viajesibi"] = "Demostraciones"
         app.run()
         app.radio[0].set_value("Comparación simulada").run()
+        app.radio[1].set_value("Lista fija y planificador anterior").run()
         app.selectbox[0].set_value("VLC")
         with (
             patch("src.interfaz_ofertas.consultar_serpapi") as api,
@@ -213,6 +217,8 @@ class TestInterfaz(unittest.TestCase):
     def test_comparacion_explica_resultado_economico_antes_del_detalle(self):
         app = self.abrir("clave-ficticia")
         app.session_state["apartado_viajesibi"] = "Comparar IA y agente"
+        app.run()
+        app.radio[0].set_value("Lista fija y planificador anterior").run()
         intento = dict(aeropuerto="OPO", ida="2027-02-01", vuelta="2027-02-04",
                        total=900, vuelo=500, alojamiento=400, consultas_proveedor=3)
         app.session_state["comparacion_real"] = (
@@ -262,3 +268,27 @@ class TestInterfaz(unittest.TestCase):
         self.assertFalse(app.exception)
         self.assertTrue(any("16 → 8" in i.value for i in app.info))
         self.assertTrue(any("24 consultas" in c.value for c in app.caption))
+
+    def test_comparacion_nueva_muestra_resultados_del_equipo(self):
+        import json
+
+        app = self.abrir()
+        app.session_state["apartado_viajesibi"] = "Demostraciones"
+        app.run()
+        app.radio[0].set_value("Comparación simulada").run()
+        app.selectbox[0].set_value("VLC")
+
+        def modelo(mensajes, formato):
+            if "busquedas" in formato["properties"]:
+                return '{"busquedas":[{"aeropuerto":"MAD","fechas":0},{"aeropuerto":"OPO","fechas":0}]}'
+            if "motivo" in formato["properties"]:
+                return '{"accion":"seguir_lista","aeropuerto":"LIS","fechas":0,"motivo":"mantener_plan"}'
+            return modelo_equipo(mensajes, formato)
+
+        with patch("src.agent.ClienteOllama.consultar_json", side_effect=modelo):
+            app.button[0].click().run()
+        self.assertFalse(app.exception)
+        self.assertIn("comparacion_simulada_equipo", app.session_state)
+        self.assertTrue(app.table)
+        resultados = app.session_state["comparacion_simulada_equipo"][0]
+        self.assertEqual(resultados[1][0], "Equipo de cuatro agentes")
